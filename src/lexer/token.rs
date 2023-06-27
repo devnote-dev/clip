@@ -5,6 +5,12 @@ pub enum Token {
     EOF,
 
     Assign,
+    Equal,
+    Plus,
+    Minus,
+    Asterisk,
+    Slash,
+    Bang,
 
     Integer(String),
     Float(String),
@@ -21,6 +27,12 @@ impl Display for Token {
         match self {
             Token::EOF => write!(f, "eof"),
             Token::Assign => write!(f, "assign"),
+            Token::Equal => write!(f, "equal"),
+            Token::Plus => write!(f, "plus"),
+            Token::Minus => write!(f, "minus"),
+            Token::Asterisk => write!(f, "asterisk"),
+            Token::Slash => write!(f, "slash"),
+            Token::Bang => write!(f, "bang"),
             Token::Integer(v) => write!(f, "integer: {}", v),
             Token::Float(v) => write!(f, "float: {}", v),
             Token::String(v) => write!(f, "string: {}", v),

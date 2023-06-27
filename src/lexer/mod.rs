@@ -26,7 +26,39 @@ impl<'a> Lexer<'a> {
                         _ = self.input.next();
                     }
                     '=' => {
-                        res.push(Token::Assign);
+                        _ = self.input.next();
+                        match self.input.peek() {
+                            Some(&c) => {
+                                if c == '=' {
+                                    res.push(Token::Equal);
+                                    _ = self.input.next();
+                                } else {
+                                    res.push(Token::Assign);
+                                }
+                            }
+                            None => {
+                                res.push(Token::Assign);
+                            }
+                        }
+                    }
+                    '+' => {
+                        res.push(Token::Plus);
+                        _ = self.input.next();
+                    }
+                    '-' => {
+                        res.push(Token::Minus);
+                        _ = self.input.next();
+                    }
+                    '*' => {
+                        res.push(Token::Asterisk);
+                        _ = self.input.next();
+                    }
+                    '/' => {
+                        res.push(Token::Slash);
+                        _ = self.input.next();
+                    }
+                    '!' => {
+                        res.push(Token::Bang);
                         _ = self.input.next();
                     }
                     '0'..='9' => res.push(self.lex_int_or_float()),
@@ -211,6 +243,24 @@ baz
                 Token::Assign,
                 Token::Ident("foo".to_string()),
                 Token::Integer("123".to_string()),
+                Token::EOF
+            ]
+        );
+    }
+
+    #[test]
+    fn test_operators() {
+        let tokens = Lexer::new("===+-*/!").lex();
+        assert_eq!(
+            tokens,
+            [
+                Token::Equal,
+                Token::Assign,
+                Token::Plus,
+                Token::Minus,
+                Token::Asterisk,
+                Token::Slash,
+                Token::Bang,
                 Token::EOF
             ]
         );
