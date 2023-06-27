@@ -1,0 +1,11 @@
+[package]
+name = "clip"
+version = "0.1.0"
+edition = "2021"
+authors = [
+    "Devonte W <https://github.com/devnote-dev>"
+]
+license = "MPL"
+repository = "https://github.com/devnote-dev/clip"
+
+# [dependencies]
