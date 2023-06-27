@@ -3,6 +3,8 @@ use std::fmt::{Display, Formatter, Result};
 #[derive(Debug, Eq, PartialEq)]
 pub enum Token {
     EOF,
+    LeftParen,
+    RightParen,
 
     Assign,
     Equal,
@@ -26,6 +28,8 @@ impl Display for Token {
         write!(f, "Token(")?;
         match self {
             Token::EOF => write!(f, "eof"),
+            Token::LeftParen => write!(f, "left paren"),
+            Token::RightParen => write!(f, "right paren"),
             Token::Assign => write!(f, "assign"),
             Token::Equal => write!(f, "equal"),
             Token::Plus => write!(f, "plus"),

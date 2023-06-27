@@ -25,6 +25,14 @@ impl<'a> Lexer<'a> {
                     ' ' | '\t' | '\r' | '\n' => {
                         _ = self.input.next();
                     }
+                    '(' => {
+                        res.push(Token::LeftParen);
+                        _ = self.input.next();
+                    }
+                    ')' => {
+                        res.push(Token::RightParen);
+                        _ = self.input.next();
+                    }
                     '=' => {
                         _ = self.input.next();
                         match self.input.peek() {
@@ -168,6 +176,27 @@ mod test {
     fn test_empty_input() {
         let tokens = Lexer::new("").lex();
         assert_eq!(tokens, [Token::EOF]);
+    }
+
+    #[test]
+    fn test_parentheses() {
+        let tokens = Lexer::new("(()()()())").lex();
+        assert_eq!(
+            tokens,
+            [
+                Token::LeftParen,
+                Token::LeftParen,
+                Token::RightParen,
+                Token::LeftParen,
+                Token::RightParen,
+                Token::LeftParen,
+                Token::RightParen,
+                Token::LeftParen,
+                Token::RightParen,
+                Token::RightParen,
+                Token::EOF
+            ]
+        );
     }
 
     #[test]
