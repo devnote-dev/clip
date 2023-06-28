@@ -1,7 +1,28 @@
 use clip::{lexer::Lexer, parser::Parser};
-use std::io::{self, Write};
+use std::{
+    env,
+    io::{self, Write},
+};
 
 fn main() {
+    if env::args().len() == 0 {
+        repl();
+    } else {
+        let input = env::args().skip(1).collect::<String>();
+        let tokens = Lexer::new(&input).lex();
+
+        match Parser::new(tokens).parse() {
+            Ok(p) => {
+                for stmt in p.statements {
+                    println!("{:?}", stmt);
+                }
+            }
+            Err(e) => eprintln!("{}", e),
+        }
+    }
+}
+
+fn repl() {
     let mut input = String::new();
 
     loop {
