@@ -49,10 +49,14 @@ impl Parser {
     }
 
     pub fn peek_token(&self) -> Option<&Token> {
-        if self.tokens.is_empty() {
+        if self.pos + 1 >= self.tokens.len() {
             None
         } else {
             Some(&self.tokens[self.pos + 1])
         }
+    }
+
+    pub fn back_token(&mut self) {
+        self.pos -= 1;
     }
 }
