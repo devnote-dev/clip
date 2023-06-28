@@ -30,7 +30,7 @@ impl Parse for Program {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     Assign(Assign),
     Expression(Expression),
@@ -45,7 +45,7 @@ impl Parse for Statement {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Assign {
     pub name: Identifier,
     pub value: Expression,
@@ -65,7 +65,7 @@ impl Parse for Assign {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Expression {
     Primitive(Primitive),
     Identifier(Identifier),
@@ -110,7 +110,7 @@ impl Parse for Expression {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Primitive {
     Integer(i64),
     Float(f64),
@@ -131,7 +131,7 @@ impl Parse for Primitive {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Identifier {
     pub value: String,
 }
@@ -145,7 +145,7 @@ impl Parse for Identifier {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Operator {
     pub kind: OperatorKind,
     pub args: Vec<Expression>,
@@ -183,7 +183,7 @@ impl Parse for Operator {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum OperatorKind {
     Equal,
     Add,
@@ -193,7 +193,7 @@ pub enum OperatorKind {
     Inverse,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Function {
     pub params: Vec<Identifier>,
     pub body: Vec<Statement>,
@@ -247,7 +247,7 @@ impl Parse for Function {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Call {
     pub name: Identifier,
     pub args: Vec<Expression>,
