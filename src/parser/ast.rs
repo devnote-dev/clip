@@ -40,20 +40,7 @@ impl<'a> Parse<'a> for Statement {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::Assign => Ok(Self::Assign(Assign::parse(p)?)),
-            _ => {
-                let expr = Expression::parse(p)?;
-                match p.peek_token() {
-                    Some(t) => match t {
-                        Token::EOF | Token::BlockEnd => Ok(Self::Expression(expr)),
-                        Token::Semicolon | Token::Newline => {
-                            _ = p.next_token();
-                            Ok(Self::Expression(expr))
-                        }
-                        t => Err(Error::new(&format!("unexpected {t}"))),
-                    },
-                    None => Ok(Self::Expression(expr)),
-                }
-            }
+            _ => Ok(Self::Expression(Expression::parse(p)?)),
         }
     }
 }
@@ -92,16 +79,13 @@ impl<'a> Parse<'a> for Expression {
             Token::LeftParen => {
                 _ = p.next_token();
                 let expr = Expression::parse(p)?;
-                match p.peek_token() {
-                    Some(t) => {
-                        if t == &Token::RightParen {
-                            _ = p.next_token();
-                            Ok(expr)
-                        } else {
-                            Err(Error::new(&format!("expected right paren; got {t}")))
-                        }
-                    }
-                    None => Ok(expr),
+                let t = p.peek_token();
+
+                if t == &Token::RightParen {
+                    _ = p.next_token();
+                    Ok(expr)
+                } else {
+                    Err(Error::new(&format!("expected right paren; got {t}")))
                 }
             }
             Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
@@ -211,27 +195,22 @@ pub struct Function {
 
 impl<'a> Parse<'a> for Function {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        _ = p.next_token();
         let mut params = Vec::new();
 
-        if p.current_token() == Token::LeftBracket {
-            _ = p.next_token();
+        if p.next_token() == &Token::LeftBracket {
             match p.next_token() {
                 Token::EOF => return Err(Error::new("unexpected end of file")),
                 Token::RightBracket => _ = p.next_token(),
                 _ => {
                     params.push(Identifier::parse(p)?);
                     loop {
-                        match p.peek_token() {
-                            Some(t) => match t {
-                                Token::EOF => return Err(Error::new("unexpected end of file")),
-                                Token::RightBracket => break,
-                                _ => {
-                                    params.push(Identifier::parse(p)?);
-                                    _ = p.next_token();
-                                }
-                            },
-                            None => return Err(Error::new("unexpected end of file")),
+                        match p.next_token() {
+                            Token::EOF => return Err(Error::new("unexpected end of file")),
+                            Token::RightBracket => {
+                                _ = p.next_token();
+                                break;
+                            }
+                            _ => params.push(Identifier::parse(p)?),
                         }
                     }
                 }
@@ -250,6 +229,9 @@ impl<'a> Parse<'a> for Function {
                 }
                 _ => {
                     body.push(Statement::parse(p)?);
+                    if p.current_token() == Token::BlockEnd {
+                        break;
+                    }
                     _ = p.next_token();
                 }
             }
