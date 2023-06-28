@@ -43,7 +43,8 @@ pub struct Scope {
 impl Scope {
     pub fn new() -> Self {
         Self {
-            ..Default::default()
+            store: Default::default(),
+            outer: None,
         }
     }
 
