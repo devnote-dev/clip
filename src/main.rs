@@ -1,4 +1,4 @@
-use clip::{lexer::Lexer, parser::Parser};
+use clip::{eval::Evaluator, lexer::Lexer, parser::Parser};
 use std::{
     env,
     io::{self, Write},
@@ -13,11 +13,10 @@ fn main() {
         // println!("{:?}", tokens);
 
         match Parser::new(tokens).parse() {
-            Ok(p) => {
-                for stmt in p.statements {
-                    println!("{:?}", stmt);
-                }
-            }
+            Ok(p) => match Evaluator::new(p).eval() {
+                Ok(v) => println!("{:?}", v),
+                Err(e) => eprintln!("{}", e),
+            },
             Err(e) => eprintln!("{}", e),
         }
     }
