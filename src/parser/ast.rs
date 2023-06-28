@@ -42,12 +42,16 @@ impl<'a> Parse<'a> for Statement {
             Token::Assign => Ok(Self::Assign(Assign::parse(p, None)?)),
             _ => {
                 let expr = Expression::parse(p, Some(Precedence::Lowest))?;
-                match p.next_token() {
-                    Token::Semicolon | Token::Newline => {
-                        _ = p.next_token();
-                        Ok(Self::Expression(expr))
-                    }
-                    t => Err(Error::new(&format!("unexpected {t}"))),
+                match p.peek_token() {
+                    Some(t) => match t {
+                        Token::EOF => Ok(Self::Expression(expr)),
+                        Token::Semicolon | Token::Newline => {
+                            _ = p.next_token();
+                            Ok(Self::Expression(expr))
+                        }
+                        t => Err(Error::new(&format!("unexpected {t}"))),
+                    },
+                    None => Ok(Self::Expression(expr)),
                 }
             }
         }
@@ -84,6 +88,21 @@ pub enum Expression {
 impl<'a> Parse<'a> for Expression {
     fn parse(p: &mut Parser, _: Option<Precedence>) -> Result<Self, Error> {
         match p.current_token() {
+            Token::LeftParen => {
+                _ = p.next_token();
+                let expr = Expression::parse(p, Some(Precedence::Lowest))?;
+                match p.peek_token() {
+                    Some(t) => {
+                        if t == &Token::RightParen {
+                            _ = p.next_token();
+                            Ok(expr)
+                        } else {
+                            Err(Error::new(&format!("expected right paren; got {t}")))
+                        }
+                    }
+                    None => Ok(expr),
+                }
+            }
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p, None)?))
             }
@@ -157,9 +176,14 @@ impl<'a> Parse<'a> for Operator {
         loop {
             match p.next_token() {
                 Token::EOF | Token::Semicolon | Token::Newline => break,
-                _ => {
-                    args.push(Expression::parse(p, Some(Precedence::Lowest))?);
+                Token::RightParen => {
+                    p.back_token();
+                    break;
                 }
+                _ => match Expression::parse(p, Some(Precedence::Lowest)) {
+                    Ok(expr) => args.push(expr),
+                    Err(_) => break,
+                },
             }
         }
 
