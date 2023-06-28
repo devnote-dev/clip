@@ -10,9 +10,20 @@ impl<'a> Parse<'a> for Program {
     fn parse(p: &mut Parser, _: Option<Precedence>) -> Result<Self, Error> {
         let mut statements = Vec::new();
 
-        while p.current_token() != Token::EOF {
-            statements.push(Statement::parse(p, None)?);
-            _ = p.next_token();
+        loop {
+            match p.current_token() {
+                Token::EOF => break,
+                Token::Semicolon | Token::Newline => {
+                    _ = p.next_token();
+                }
+                _ => {
+                    statements.push(Statement::parse(p, None)?);
+                    if p.current_token() == Token::EOF {
+                        break;
+                    }
+                    _ = p.next_token();
+                }
+            }
         }
 
         Ok(Self { statements })
@@ -31,9 +42,13 @@ impl<'a> Parse<'a> for Statement {
             Token::Assign => Ok(Self::Assign(Assign::parse(p, None)?)),
             _ => {
                 let expr = Expression::parse(p, Some(Precedence::Lowest))?;
-                // TODO: check if newline or semicolon
-
-                Ok(Self::Expression(expr))
+                match p.next_token() {
+                    Token::Semicolon | Token::Newline => {
+                        _ = p.next_token();
+                        Ok(Self::Expression(expr))
+                    }
+                    t => Err(Error::new(&format!("unexpected {t}"))),
+                }
             }
         }
     }
@@ -52,7 +67,10 @@ impl<'a> Parse<'a> for Assign {
         _ = p.next_token();
         let value = Expression::parse(p, Some(Precedence::Lowest))?;
 
-        Ok(Self { name, value })
+        match p.next_token() {
+            Token::EOF | Token::Semicolon | Token::Newline => Ok(Self { name, value }),
+            t => Err(Error::new(&format!("unexpected {t}"))),
+        }
     }
 }
 
@@ -76,7 +94,7 @@ impl<'a> Parse<'a> for Expression {
             | Token::Asterisk
             | Token::Slash
             | Token::Bang => Ok(Self::Operator(Operator::parse(p, None)?)),
-            _ => Err(Error::new("unexpected thing")),
+            t => Err(Error::new(&format!("unexpected {t}"))),
         }
     }
 }
@@ -119,7 +137,7 @@ impl<'a> Parse<'a> for Identifier {
 #[derive(Debug)]
 pub struct Operator {
     pub kind: OperatorKind,
-    pub rest: Box<Expression>,
+    pub args: Vec<Expression>,
 }
 
 impl<'a> Parse<'a> for Operator {
@@ -134,10 +152,18 @@ impl<'a> Parse<'a> for Operator {
             _ => unreachable!(),
         };
 
-        _ = p.next_token();
-        let rest = Box::new(Expression::parse(p, Some(Precedence::Lowest))?);
+        let mut args = Vec::new();
 
-        Ok(Self { kind, rest })
+        loop {
+            match p.next_token() {
+                Token::EOF | Token::Semicolon | Token::Newline => break,
+                _ => {
+                    args.push(Expression::parse(p, Some(Precedence::Lowest))?);
+                }
+            }
+        }
+
+        Ok(Self { kind, args })
     }
 }
 
