@@ -1,5 +1,5 @@
-use super::{error::Error, Parse, Parser};
-use crate::lexer::token::Token;
+use super::{Parse, Parser};
+use crate::{error::Error, lexer::token::Token};
 
 #[derive(Debug)]
 pub struct Program {
