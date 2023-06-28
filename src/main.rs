@@ -5,11 +5,12 @@ use std::{
 };
 
 fn main() {
-    if env::args().len() == 0 {
+    if env::args().len() == 1 {
         repl();
     } else {
         let input = env::args().skip(1).collect::<String>();
         let tokens = Lexer::new(&input).lex();
+        // println!("{:?}", tokens);
 
         match Parser::new(tokens).parse() {
             Ok(p) => {
@@ -31,6 +32,8 @@ fn repl() {
         io::stdin().read_line(&mut input).unwrap();
 
         let tokens = Lexer::new(&input).lex();
+        // println!("{:?}", tokens);
+
         match Parser::new(tokens).parse() {
             Ok(p) => {
                 for stmt in p.statements {
@@ -39,5 +42,7 @@ fn repl() {
             }
             Err(e) => eprintln!("{}", e),
         }
+
+        input.clear();
     }
 }
