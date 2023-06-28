@@ -5,7 +5,7 @@ use crate::lexer::token::Token;
 use ast::Program;
 use error::Error;
 
-pub trait Parse<'a>
+pub trait Parse
 where
     Self: Sized,
 {

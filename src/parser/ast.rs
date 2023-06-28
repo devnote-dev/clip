@@ -6,7 +6,7 @@ pub struct Program {
     pub statements: Vec<Statement>,
 }
 
-impl<'a> Parse<'a> for Program {
+impl Parse for Program {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let mut statements = Vec::new();
 
@@ -36,7 +36,7 @@ pub enum Statement {
     Expression(Expression),
 }
 
-impl<'a> Parse<'a> for Statement {
+impl Parse for Statement {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::Assign => Ok(Self::Assign(Assign::parse(p)?)),
@@ -51,7 +51,7 @@ pub struct Assign {
     pub value: Expression,
 }
 
-impl<'a> Parse<'a> for Assign {
+impl Parse for Assign {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         _ = p.next_token();
         let name = Identifier::parse(p)?;
@@ -73,7 +73,7 @@ pub enum Expression {
     Function(Function),
 }
 
-impl<'a> Parse<'a> for Expression {
+impl Parse for Expression {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::LeftParen => {
@@ -112,7 +112,7 @@ pub enum Primitive {
     Boolean(bool),
 }
 
-impl<'a> Parse<'a> for Primitive {
+impl Parse for Primitive {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         Ok(match p.current_token() {
             Token::Integer(v) => Self::Integer(v.parse()?),
@@ -130,7 +130,7 @@ pub struct Identifier {
     pub value: String,
 }
 
-impl<'a> Parse<'a> for Identifier {
+impl Parse for Identifier {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::Ident(value) => Ok(Self { value }),
@@ -145,7 +145,7 @@ pub struct Operator {
     pub args: Vec<Expression>,
 }
 
-impl<'a> Parse<'a> for Operator {
+impl Parse for Operator {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let kind = match p.current_token() {
             Token::Equal => OperatorKind::Equal,
@@ -193,7 +193,7 @@ pub struct Function {
     pub body: Vec<Statement>,
 }
 
-impl<'a> Parse<'a> for Function {
+impl Parse for Function {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let mut params = Vec::new();
 
