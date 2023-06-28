@@ -5,22 +5,11 @@ use crate::lexer::token::Token;
 use ast::Program;
 use error::Error;
 
-#[derive(Debug)]
-pub enum Precedence {
-    Lowest,
-    Equals,
-    LessGreater,
-    Sum,
-    Product,
-    Prefix,
-    Call,
-}
-
 pub trait Parse<'a>
 where
     Self: Sized,
 {
-    fn parse(p: &mut Parser, prec: Option<Precedence>) -> Result<Self, Error>;
+    fn parse(p: &mut Parser) -> Result<Self, Error>;
 }
 
 #[derive(Debug)]
@@ -35,7 +24,7 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Result<Program, Error> {
-        Program::parse(self, None)
+        Program::parse(self)
     }
 
     pub fn current_token(&self) -> Token {
