@@ -58,7 +58,7 @@ impl Parse for Assign {
         _ = p.next_token();
         let value = Expression::parse(p)?;
 
-        match p.next_token() {
+        match p.peek_token() {
             Token::EOF | Token::Semicolon | Token::Newline => Ok(Self { name, value }),
             t => Err(Error::new(&format!("unexpected {t}"))),
         }
@@ -71,6 +71,7 @@ pub enum Expression {
     Identifier(Identifier),
     Operator(Operator),
     Function(Function),
+    Call(Call),
 }
 
 impl Parse for Expression {
@@ -92,7 +93,12 @@ impl Parse for Expression {
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
             }
-            Token::Ident(_) => Ok(Self::Identifier(Identifier::parse(p)?)),
+            Token::Ident(_) => match p.peek_token() {
+                Token::EOF | Token::Semicolon | Token::Newline => {
+                    Ok(Self::Identifier(Identifier::parse(p)?))
+                }
+                _ => Ok(Self::Call(Call::parse(p)?)),
+            },
             Token::Equal
             | Token::Plus
             | Token::Minus
@@ -238,5 +244,27 @@ impl Parse for Function {
         }
 
         Ok(Self { params, body })
+    }
+}
+
+#[derive(Debug)]
+pub struct Call {
+    pub name: Identifier,
+    pub args: Vec<Expression>,
+}
+
+impl Parse for Call {
+    fn parse(p: &mut Parser) -> Result<Self, Error> {
+        let name = Identifier::parse(p)?;
+        let mut args = Vec::new();
+
+        loop {
+            match p.next_token() {
+                Token::EOF | Token::Semicolon | Token::Newline => break,
+                _ => args.push(Expression::parse(p)?),
+            }
+        }
+
+        Ok(Self { name, args })
     }
 }
