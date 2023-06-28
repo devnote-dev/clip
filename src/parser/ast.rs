@@ -44,7 +44,7 @@ impl<'a> Parse<'a> for Statement {
                 let expr = Expression::parse(p)?;
                 match p.peek_token() {
                     Some(t) => match t {
-                        Token::EOF => Ok(Self::Expression(expr)),
+                        Token::EOF | Token::BlockEnd => Ok(Self::Expression(expr)),
                         Token::Semicolon | Token::Newline => {
                             _ = p.next_token();
                             Ok(Self::Expression(expr))
@@ -83,6 +83,7 @@ pub enum Expression {
     Primitive(Primitive),
     Identifier(Identifier),
     Operator(Operator),
+    Function(Function),
 }
 
 impl<'a> Parse<'a> for Expression {
@@ -103,6 +104,7 @@ impl<'a> Parse<'a> for Expression {
                     None => Ok(expr),
                 }
             }
+            Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
             }
@@ -167,7 +169,7 @@ impl<'a> Parse<'a> for Operator {
             Token::Minus => OperatorKind::Subtract,
             Token::Asterisk => OperatorKind::Multiply,
             Token::Slash => OperatorKind::Divide,
-            Token::Bang => OperatorKind::Bang,
+            Token::Bang => OperatorKind::Inverse,
             _ => unreachable!(),
         };
 
@@ -198,5 +200,61 @@ pub enum OperatorKind {
     Subtract,
     Multiply,
     Divide,
-    Bang,
+    Inverse,
+}
+
+#[derive(Debug)]
+pub struct Function {
+    pub params: Vec<Identifier>,
+    pub body: Vec<Statement>,
+}
+
+impl<'a> Parse<'a> for Function {
+    fn parse(p: &mut Parser) -> Result<Self, Error> {
+        _ = p.next_token();
+        let mut params = Vec::new();
+
+        if p.current_token() == Token::LeftBracket {
+            _ = p.next_token();
+            match p.next_token() {
+                Token::EOF => return Err(Error::new("unexpected end of file")),
+                Token::RightBracket => _ = p.next_token(),
+                _ => {
+                    params.push(Identifier::parse(p)?);
+                    loop {
+                        match p.peek_token() {
+                            Some(t) => match t {
+                                Token::EOF => return Err(Error::new("unexpected end of file")),
+                                Token::RightBracket => break,
+                                _ => {
+                                    params.push(Identifier::parse(p)?);
+                                    _ = p.next_token();
+                                }
+                            },
+                            None => return Err(Error::new("unexpected end of file")),
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut body = Vec::new();
+
+        loop {
+            match p.current_token() {
+                Token::EOF => return Err(Error::new("unexpected end of file")),
+                Token::Semicolon | Token::Newline => _ = p.next_token(),
+                Token::BlockEnd => {
+                    _ = p.next_token();
+                    break;
+                }
+                _ => {
+                    body.push(Statement::parse(p)?);
+                    _ = p.next_token();
+                }
+            }
+        }
+
+        Ok(Self { params, body })
+    }
 }
