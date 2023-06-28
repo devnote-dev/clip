@@ -22,7 +22,23 @@ impl<'a> Lexer<'a> {
         loop {
             match self.input.peek() {
                 Some(&c) => match c {
-                    ' ' | '\t' | '\r' | '\n' => {
+                    ' ' | '\t' => {
+                        _ = self.input.next();
+                    }
+                    '\r' => {
+                        if let Some(c) = self.input.next() {
+                            if c == '\n' {
+                                res.push(Token::Newline);
+                                _ = self.input.next();
+                            }
+                        }
+                    }
+                    '\n' => {
+                        res.push(Token::Newline);
+                        _ = self.input.next();
+                    }
+                    ';' => {
+                        res.push(Token::Semicolon);
                         _ = self.input.next();
                     }
                     '(' => {
@@ -234,7 +250,11 @@ baz
 
         assert_eq!(
             tokens,
-            [Token::String("\nfoo\nbar\nbaz\n".to_string()), Token::EOF]
+            [
+                Token::Newline,
+                Token::String("\nfoo\nbar\nbaz\n".to_string()),
+                Token::EOF
+            ]
         );
     }
 
