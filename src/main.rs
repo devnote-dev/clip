@@ -1,4 +1,8 @@
-use clip::{eval::Evaluator, lexer::Lexer, parser::Parser};
+use clip::{
+    eval::{eval, Scope},
+    lexer::Lexer,
+    parser::Parser,
+};
 use std::{
     env,
     io::{self, Write},
@@ -13,7 +17,7 @@ fn main() {
         // println!("{:?}", tokens);
 
         match Parser::new(tokens).parse() {
-            Ok(p) => match Evaluator::new(p).eval() {
+            Ok(p) => match eval(p, &mut Scope::default()) {
                 Ok(v) => println!("{:?}", v),
                 Err(e) => eprintln!("{}", e),
             },
@@ -24,6 +28,7 @@ fn main() {
 
 fn repl() {
     let mut input = String::new();
+    let mut scope = Scope::default();
 
     loop {
         print!(">> ");
@@ -34,11 +39,10 @@ fn repl() {
         // println!("{:?}", tokens);
 
         match Parser::new(tokens).parse() {
-            Ok(p) => {
-                for stmt in p.statements {
-                    println!("{:?}", stmt);
-                }
-            }
+            Ok(p) => match eval(p, &mut scope) {
+                Ok(v) => println!("{:?}", v),
+                Err(e) => eprintln!("{}", e),
+            },
             Err(e) => eprintln!("{}", e),
         }
 

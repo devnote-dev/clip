@@ -7,31 +7,17 @@ use crate::{
 use std::collections::HashMap;
 use value::Value;
 
-#[derive(Debug)]
-pub struct Evaluator {
-    statements: Vec<Statement>,
-}
+pub fn eval(program: Program, scope: &mut Scope) -> Result<Value, Error> {
+    let mut result = Value::Primitive(Primitive::Null);
 
-impl Evaluator {
-    pub fn new(program: Program) -> Self {
-        Self {
-            statements: program.statements,
+    for stmt in &program.statements {
+        match stmt {
+            Statement::Assign(a) => result = Value::eval_assign(a, scope)?,
+            Statement::Expression(e) => result = Value::eval_expr(e, scope)?,
         }
     }
 
-    pub fn eval(&self) -> Result<Value, Error> {
-        let mut scope = Scope::default();
-        let mut result = Value::Primitive(Primitive::Null);
-
-        for stmt in &self.statements {
-            match stmt {
-                Statement::Assign(a) => result = Value::eval_assign(a, &mut scope)?,
-                Statement::Expression(e) => result = Value::eval_expr(e, &mut scope)?,
-            }
-        }
-
-        Ok(result)
-    }
+    Ok(result)
 }
 
 #[derive(Debug)]
