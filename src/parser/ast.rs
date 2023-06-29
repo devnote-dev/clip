@@ -1,5 +1,6 @@
 use super::{Parse, Parser};
 use crate::{error::Error, lexer::token::Token};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug)]
 pub struct Program {
@@ -131,6 +132,17 @@ impl Parse for Primitive {
     }
 }
 
+impl Display for Primitive {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match *self {
+            Primitive::Integer(_) => write!(f, "integer"),
+            Primitive::Float(_) => write!(f, "float"),
+            Primitive::String(_) => write!(f, "string"),
+            Primitive::Boolean(_) => write!(f, "boolean"),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Identifier {
     pub value: String,
@@ -191,6 +203,19 @@ pub enum OperatorKind {
     Multiply,
     Divide,
     Inverse,
+}
+
+impl Display for OperatorKind {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match *self {
+            OperatorKind::Equal => write!(f, "equal"),
+            OperatorKind::Add => write!(f, "add"),
+            OperatorKind::Subtract => write!(f, "subtract"),
+            OperatorKind::Multiply => write!(f, "multiply"),
+            OperatorKind::Divide => write!(f, "divide"),
+            OperatorKind::Inverse => write!(f, "inverse"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]

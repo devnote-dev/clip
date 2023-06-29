@@ -1,7 +1,7 @@
-pub mod ast;
-
 use crate::{error::Error, lexer::token::Token};
 use ast::Program;
+
+pub mod ast;
 
 pub trait Parse
 where
