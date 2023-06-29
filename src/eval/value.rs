@@ -1,7 +1,9 @@
 use super::Scope;
 use crate::{
     error::Error,
-    parser::ast::{Assign, Expression, Function, Operator, OperatorKind, Primitive},
+    parser::ast::{
+        Assign, Call, Expression, Function, Operator, OperatorKind, Primitive, Statement,
+    },
 };
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -28,7 +30,7 @@ impl Value {
             },
             Expression::Operator(v) => Value::eval_operator(v.clone(), scope),
             Expression::Function(v) => Ok(Self::Function(v.clone())),
-            Expression::Call(_) => todo!(),
+            Expression::Call(v) => Value::eval_call(v.clone(), scope),
         }
     }
 
@@ -126,6 +128,48 @@ impl Value {
                 Ok(Self::Primitive(Primitive::String(res)))
             }
             val => Err(Error::new(&format!("cannot compare type {}", val))),
+        }
+    }
+
+    fn eval_call(call: Call, scope: &mut Scope) -> Result<Self, Error> {
+        let Some(val) = scope.get(&call.name) else {
+            return Err(Error::new(&format!("undefined function variable {}", call.name.value)));
+        };
+
+        match val {
+            Value::Function(fun) => {
+                if call.args.len() != fun.params.len() {
+                    return Err(Error::new(&format!(
+                        "expected {} arguments to function {}",
+                        fun.params.len(),
+                        call.name.value
+                    )));
+                }
+
+                let mut child = Scope {
+                    store: Default::default(),
+                    outer: Some(Box::new(scope.clone())),
+                };
+
+                for (param, expr) in fun.params.iter().zip(call.args.iter()) {
+                    let v = &Value::eval_expr(expr, &mut child)?;
+                    child.set(param, v);
+                }
+
+                let mut result = Self::Primitive(Primitive::Null);
+
+                for stmt in &fun.body {
+                    match stmt {
+                        Statement::Assign(a) => result = Self::eval_assign(a, &mut child)?,
+                        Statement::Expression(e) => result = Self::eval_expr(e, &mut child)?,
+                    }
+                }
+
+                Ok(result)
+            }
+            Value::Primitive(p) => {
+                Err(Error::new(&format!("cannot call type {} as a function", p)))
+            }
         }
     }
 

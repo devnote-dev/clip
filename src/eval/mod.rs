@@ -1,11 +1,11 @@
-pub mod value;
-
 use crate::{
     error::Error,
     parser::ast::{Identifier, Primitive, Program, Statement},
 };
 use std::collections::HashMap;
 use value::Value;
+
+pub mod value;
 
 pub fn eval(program: Program, scope: &mut Scope) -> Result<Value, Error> {
     let mut result = Value::Primitive(Primitive::Null);
@@ -20,7 +20,7 @@ pub fn eval(program: Program, scope: &mut Scope) -> Result<Value, Error> {
     Ok(result)
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Scope {
     store: HashMap<String, Value>,
     outer: Option<Box<Scope>>,
