@@ -91,7 +91,42 @@ impl Value {
 
                 Ok(Self::Primitive(Primitive::Integer(res.iter().sum())))
             }
-            _ => todo!(),
+            Primitive::Float(val) => {
+                let mut res = Vec::new();
+                res.push(*val);
+
+                for arg in values.iter().skip(1) {
+                    match arg {
+                        Primitive::Float(v) => res.push(*v),
+                        _ => {
+                            return Err(Error::new(&format!(
+                                "cannot compare type float with type {}",
+                                arg
+                            )))
+                        }
+                    }
+                }
+
+                Ok(Self::Primitive(Primitive::Float(res.iter().sum())))
+            }
+            Primitive::String(val) => {
+                let mut res = val.clone();
+
+                for arg in values.iter().skip(1) {
+                    match arg {
+                        Primitive::String(v) => res.push_str(v),
+                        _ => {
+                            return Err(Error::new(&format!(
+                                "cannot compare type string with type {}",
+                                arg
+                            )))
+                        }
+                    }
+                }
+
+                Ok(Self::Primitive(Primitive::String(res)))
+            }
+            Primitive::Boolean(_) => Err(Error::new("cannot compare type boolean")),
         }
     }
 }
