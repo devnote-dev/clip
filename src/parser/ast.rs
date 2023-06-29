@@ -75,6 +75,40 @@ pub enum Expression {
     Call(Call),
 }
 
+impl Expression {
+    fn parse_non_call(p: &mut Parser) -> Result<Self, Error> {
+        match p.current_token() {
+            Token::LeftParen => {
+                if p.next_token() == &Token::RightParen {
+                    return Ok(Self::Primitive(Primitive::Null));
+                }
+
+                let expr = Expression::parse(p)?;
+                let t = p.peek_token();
+
+                if t == &Token::RightParen {
+                    _ = p.next_token();
+                    Ok(expr)
+                } else {
+                    Err(Error::new(&format!("expected right paren; got {t}")))
+                }
+            }
+            Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
+            Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
+                Ok(Self::Primitive(Primitive::parse(p)?))
+            }
+            Token::Ident(_) => Ok(Self::Identifier(Identifier::parse(p)?)),
+            Token::Equal
+            | Token::Plus
+            | Token::Minus
+            | Token::Asterisk
+            | Token::Slash
+            | Token::Bang => Ok(Self::Operator(Operator::parse(p)?)),
+            t => Err(Error::new(&format!("unexpected token {t}"))),
+        }
+    }
+}
+
 impl Parse for Expression {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
@@ -183,16 +217,19 @@ impl Parse for Operator {
         let mut args = Vec::new();
 
         loop {
-            match p.next_token() {
+            match p.peek_token() {
                 Token::EOF | Token::Semicolon | Token::Newline => break,
                 Token::RightParen => {
-                    p.back_token();
+                    _ = p.next_token();
                     break;
                 }
-                _ => match Expression::parse(p) {
-                    Ok(expr) => args.push(expr),
-                    Err(_) => break,
-                },
+                _ => {
+                    _ = p.next_token();
+                    match Expression::parse_non_call(p) {
+                        Ok(expr) => args.push(expr),
+                        Err(_) => break,
+                    }
+                }
             }
         }
 
