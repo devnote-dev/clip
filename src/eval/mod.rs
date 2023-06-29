@@ -2,7 +2,7 @@ pub mod value;
 
 use crate::{
     error::Error,
-    parser::ast::{Identifier, Program, Statement},
+    parser::ast::{Identifier, Primitive, Program, Statement},
 };
 use std::collections::HashMap;
 use value::Value;
@@ -21,7 +21,7 @@ impl Evaluator {
 
     pub fn eval(&self) -> Result<Value, Error> {
         let mut scope = Scope::default();
-        let mut result = Value::Null;
+        let mut result = Value::Primitive(Primitive::Null);
 
         for stmt in &self.statements {
             match stmt {

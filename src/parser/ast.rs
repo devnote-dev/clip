@@ -79,7 +79,10 @@ impl Parse for Expression {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::LeftParen => {
-                _ = p.next_token();
+                if p.next_token() == &Token::RightParen {
+                    return Ok(Self::Primitive(Primitive::Null));
+                }
+
                 let expr = Expression::parse(p)?;
                 let t = p.peek_token();
 
@@ -117,6 +120,7 @@ pub enum Primitive {
     Float(f64),
     String(String),
     Boolean(bool),
+    Null,
 }
 
 impl Parse for Primitive {
@@ -139,6 +143,7 @@ impl Display for Primitive {
             Primitive::Float(_) => write!(f, "float"),
             Primitive::String(_) => write!(f, "string"),
             Primitive::Boolean(_) => write!(f, "boolean"),
+            Primitive::Null => write!(f, "null"),
         }
     }
 }

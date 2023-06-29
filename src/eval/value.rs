@@ -9,7 +9,6 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 pub enum Value {
     Primitive(Primitive),
     Function(Function),
-    Null,
 }
 
 impl Value {
@@ -126,7 +125,7 @@ impl Value {
 
                 Ok(Self::Primitive(Primitive::String(res)))
             }
-            Primitive::Boolean(_) => Err(Error::new("cannot compare type boolean")),
+            val => Err(Error::new(&format!("cannot compare type {}", val))),
         }
     }
 }
@@ -136,7 +135,6 @@ impl Display for Value {
         match self {
             Value::Primitive(p) => p.fmt(f),
             Value::Function(_) => write!(f, "function"),
-            Value::Null => write!(f, "null"),
         }
     }
 }
