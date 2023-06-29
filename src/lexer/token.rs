@@ -31,7 +31,6 @@ pub enum Token {
 
 impl Display for Token {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "Token(")?;
         match self {
             Token::EOF => write!(f, "eof"),
             Token::Semicolon => write!(f, "semicolon"),
@@ -56,7 +55,6 @@ impl Display for Token {
             Token::False => write!(f, "boolean: false"),
             Token::Ident(v) => write!(f, "ident: {}", v),
             Token::Illegal(v) => write!(f, "illegal: {}", v),
-        }?;
-        write!(f, ")")
+        }
     }
 }

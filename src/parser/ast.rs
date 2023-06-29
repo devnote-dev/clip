@@ -61,7 +61,7 @@ impl Parse for Assign {
 
         match p.peek_token() {
             Token::EOF | Token::Semicolon | Token::Newline => Ok(Self { name, value }),
-            t => Err(Error::new(&format!("unexpected {t}"))),
+            t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
 }
@@ -106,7 +106,7 @@ impl Parse for Expression {
             | Token::Asterisk
             | Token::Slash
             | Token::Bang => Ok(Self::Operator(Operator::parse(p)?)),
-            t => Err(Error::new(&format!("unexpected {t}"))),
+            t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
 }
@@ -152,7 +152,7 @@ impl Parse for Identifier {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::Ident(value) => Ok(Self { value }),
-            t => Err(Error::new(&format!("unexpected {t}"))),
+            t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
 }
