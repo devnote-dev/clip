@@ -18,7 +18,7 @@ fn main() {
 
         match Parser::new(tokens).parse() {
             Ok(p) => match eval(p, &mut Scope::default()) {
-                Ok(v) => println!("{:?}", v),
+                Ok(v) => println!("{} : {}", v, v.value()),
                 Err(e) => eprintln!("{}", e),
             },
             Err(e) => eprintln!("{}", e),
@@ -40,7 +40,7 @@ fn repl() {
 
         match Parser::new(tokens).parse() {
             Ok(p) => match eval(p, &mut scope) {
-                Ok(v) => println!("{:?}", v),
+                Ok(v) => println!("{} : {}", v, v.value()),
                 Err(e) => eprintln!("{}", e),
             },
             Err(e) => eprintln!("{}", e),

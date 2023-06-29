@@ -128,6 +128,19 @@ impl Value {
             val => Err(Error::new(&format!("cannot compare type {}", val))),
         }
     }
+
+    pub fn value(&self) -> String {
+        match self {
+            Value::Primitive(p) => match p {
+                Primitive::Integer(v) => v.to_string(),
+                Primitive::Float(v) => v.to_string(),
+                Primitive::String(v) => v.to_string(),
+                Primitive::Boolean(v) => v.to_string(),
+                Primitive::Null => "null".to_string(),
+            },
+            Value::Function(_) => "function".to_string(),
+        }
+    }
 }
 
 impl Display for Value {
