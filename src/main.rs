@@ -3,11 +3,9 @@ use clip::{
     eval::{eval, Scope},
     lexer::Lexer,
     parser::{ast::Statement, Parser},
+    repl,
 };
-use std::{
-    fs,
-    io::{self, Write},
-};
+use std::fs;
 
 #[derive(ClapParser)]
 struct Args {
@@ -26,80 +24,40 @@ fn main() {
         return;
     }
 
-    match args.file {
-        Some(f) => match fs::read_to_string(f) {
-            Ok(input) => {
-                let tokens = Lexer::new(&input).lex();
-                if args.token {
-                    for token in &tokens {
-                        println!("{:?}", token);
-                    }
-                    return;
-                }
-
-                match Parser::new(tokens).parse() {
-                    Ok(p) => {
-                        if args.parse {
-                            for stmt in &p.statements {
-                                match stmt {
-                                    Statement::Assign(a) => println!("{:#?}", a),
-                                    Statement::Expression(e) => println!("{:#?}", e),
-                                }
-                            }
-                            return;
-                        }
-
-                        match eval(p, &mut Scope::default()) {
-                            Ok(v) => println!("{} : {}", v, v.value()),
-                            Err(e) => eprintln!("{}", e),
-                        }
-                    }
-                    Err(e) => eprintln!("{}", e),
-                }
-            }
-            Err(e) => eprintln!("{}", e),
-        },
-        None => repl(args),
+    if args.file.is_none() {
+        return repl::repl(args.token, args.parse);
     }
-}
 
-fn repl(args: Args) {
-    let mut input = String::new();
-    let mut scope = Scope::default();
-
-    loop {
-        print!(">> ");
-        io::stdout().flush().unwrap();
-        io::stdin().read_line(&mut input).unwrap();
-
-        let tokens = Lexer::new(&input).lex();
-        if args.token {
-            for token in &tokens {
-                println!("{:?}", token);
+    match fs::read_to_string(args.file.unwrap()) {
+        Ok(input) => {
+            let tokens = Lexer::new(&input).lex();
+            if args.token {
+                for token in &tokens {
+                    println!("{:?}", token);
+                }
+                return;
             }
-            continue;
-        }
 
-        match Parser::new(tokens).parse() {
-            Ok(p) => {
-                if args.parse {
-                    for stmt in &p.statements {
-                        match stmt {
-                            Statement::Assign(a) => println!("{:#?}", a),
-                            Statement::Expression(e) => println!("{:#?}", e),
+            match Parser::new(tokens).parse() {
+                Ok(p) => {
+                    if args.parse {
+                        for stmt in &p.statements {
+                            match stmt {
+                                Statement::Assign(a) => println!("{:#?}", a),
+                                Statement::Expression(e) => println!("{:#?}", e),
+                            }
                         }
+                        return;
                     }
-                    continue;
-                }
 
-                match eval(p, &mut scope) {
-                    Ok(v) => println!("{} : {}", v, v.value()),
-                    Err(e) => eprintln!("{}", e),
+                    match eval(p, &mut Scope::default()) {
+                        Ok(v) => println!("{} : {}", v, v.value()),
+                        Err(e) => eprintln!("{}", e),
+                    }
                 }
+                Err(e) => eprintln!("{}", e),
             }
-            Err(e) => eprintln!("{}", e),
         }
-
-        input.clear();
+        Err(e) => eprintln!("{}", e),
     }
 }
