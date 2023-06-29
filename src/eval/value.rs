@@ -3,6 +3,7 @@ use crate::{
     error::Error,
     parser::ast::{Assign, Expression, Function, Operator, OperatorKind, Primitive},
 };
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
@@ -43,15 +44,15 @@ impl Value {
             return match Value::eval_expr(&op.args[0], scope)? {
                 Value::Primitive(v) => match v {
                     Primitive::Boolean(b) => Ok(Self::Primitive(Primitive::Boolean(!b))),
-                    _ => Err(Error::new(&format!("cannot inverse type {:?}", v))),
+                    _ => Err(Error::new(&format!("cannot inverse type {}", v))),
                 },
-                t => Err(Error::new(&format!("cannot inverse type {:?}", t))),
+                t => Err(Error::new(&format!("cannot inverse type {}", t))),
             };
         }
 
         if op.args.len() < 2 {
             return Err(Error::new(&format!(
-                "expected at least 2 arguments for {:?} operator",
+                "expected at least 2 arguments for {} operator",
                 op.kind
             )));
         }
@@ -60,16 +61,8 @@ impl Value {
         for arg in &op.args {
             match Value::eval_expr(arg, scope)? {
                 Value::Primitive(v) => values.push(v),
-                t => return Err(Error::new(&format!("cannot compare type {:?}", t))),
+                t => return Err(Error::new(&format!("cannot compare type {}", t))),
             }
-        }
-
-        let head = &values[0];
-        if !values.iter().all(|v| head == v) {
-            return Err(Error::new(&format!(
-                "expected all arguments to be of type {:?}",
-                head
-            )));
         }
 
         match op.kind {
@@ -79,17 +72,36 @@ impl Value {
     }
 
     fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
-        let result = &values[0];
+        match &values[0] {
+            Primitive::Integer(val) => {
+                let mut res = Vec::new();
+                res.push(*val);
 
-        // for val in values.iter().skip(1) {
-        //     match val {
-        //         Primitive::Integer(v) => result = Primitive::Integer(result + v),
-        //         Primitive::Float(v) => result = Primitive::Float(result + v),
-        //         Primitive::String(v) => result = Primitive::String(result + v),
-        //         _ => return Err(Error::new(&format!("cannot add type {:?}", val))),
-        //     }
-        // }
+                for arg in values.iter().skip(1) {
+                    match arg {
+                        Primitive::Integer(v) => res.push(*v),
+                        _ => {
+                            return Err(Error::new(&format!(
+                                "cannot compare type integer with type {}",
+                                arg
+                            )))
+                        }
+                    }
+                }
 
-        Ok(Self::Primitive(result.clone()))
+                Ok(Self::Primitive(Primitive::Integer(res.iter().sum())))
+            }
+            _ => todo!(),
+        }
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Value::Primitive(p) => p.fmt(f),
+            Value::Function(_) => write!(f, "function"),
+            Value::Null => write!(f, "null"),
+        }
     }
 }
