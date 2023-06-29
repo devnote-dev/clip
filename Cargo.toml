@@ -8,4 +8,5 @@ authors = [
 license = "MPL"
 repository = "https://github.com/devnote-dev/clip"
 
-# [dependencies]
+[dependencies]
+clap = { version = "4.3.9", features = ["derive"] }
