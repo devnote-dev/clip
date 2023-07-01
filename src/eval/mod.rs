@@ -5,6 +5,7 @@ use crate::{
 use std::collections::HashMap;
 use value::Value;
 
+pub mod ops;
 pub mod value;
 
 pub fn eval(program: Program, scope: &mut Scope) -> Result<Value, Error> {
