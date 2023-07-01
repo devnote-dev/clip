@@ -180,9 +180,21 @@ fn eval_operator_multiply(values: Vec<Primitive>) -> Result<Value, Error> {
 fn eval_operator_divide(values: Vec<Primitive>) -> Result<Value, Error> {
     match &values[0] {
         Primitive::Integer(mut val) => {
+            let mut has_zero = val == 0;
+
             for arg in values.iter().skip(1) {
                 match arg {
-                    Primitive::Integer(v) => val /= v,
+                    Primitive::Integer(v) => {
+                        if *v == 0 {
+                            if has_zero || val == 0 {
+                                return Err(Error::new("cannot divide 0 by 0"));
+                            } else if val == 1 {
+                                return Err(Error::new("infinity division"));
+                            }
+                            has_zero = true;
+                        }
+                        val /= v;
+                    }
                     _ => {
                         return Err(Error::new(&format!(
                             "cannot divide type integer with type {}",
@@ -195,9 +207,21 @@ fn eval_operator_divide(values: Vec<Primitive>) -> Result<Value, Error> {
             Ok(Value::Primitive(Primitive::Integer(val)))
         }
         Primitive::Float(mut val) => {
+            let mut has_zero = val == 0.0;
+
             for arg in values.iter().skip(1) {
                 match arg {
-                    Primitive::Float(v) => val /= v,
+                    Primitive::Float(v) => {
+                        if *v == 0.0 {
+                            if has_zero || val == 0.0 {
+                                return Err(Error::new("cannot divide 0.0 by 0.0"));
+                            } else if val == 1.0 {
+                                return Err(Error::new("infinity division"));
+                            }
+                            has_zero = true;
+                        }
+                        val /= v;
+                    }
                     _ => {
                         return Err(Error::new(&format!(
                             "cannot divide type float with type {}",
