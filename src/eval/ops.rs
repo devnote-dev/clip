@@ -39,7 +39,10 @@ pub fn eval_operator(op: Operator, scope: &mut Scope) -> Result<Value, Error> {
     match op.kind {
         OperatorKind::Add => eval_operator_add(values),
         OperatorKind::Subtract => eval_operator_subtract(values),
-        _ => todo!(),
+        OperatorKind::Multiply => eval_operator_multiply(values),
+        OperatorKind::Divide => eval_operator_divide(values),
+        OperatorKind::Equal => todo!(),
+        OperatorKind::Inverse => unreachable!(),
     }
 }
 
@@ -54,7 +57,7 @@ fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
                     Primitive::Integer(v) => res.push(*v),
                     _ => {
                         return Err(Error::new(&format!(
-                            "cannot compare type integer with type {}",
+                            "cannot add type integer with type {}",
                             arg
                         )))
                     }
@@ -72,7 +75,7 @@ fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
                     Primitive::Float(v) => res.push(*v),
                     _ => {
                         return Err(Error::new(&format!(
-                            "cannot compare type float with type {}",
+                            "cannot add type float with type {}",
                             arg
                         )))
                     }
@@ -89,7 +92,7 @@ fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
                     Primitive::String(v) => res.push_str(v),
                     _ => {
                         return Err(Error::new(&format!(
-                            "cannot compare type string with type {}",
+                            "cannot add type string with type {}",
                             arg
                         )))
                     }
@@ -110,7 +113,7 @@ fn eval_operator_subtract(values: Vec<Primitive>) -> Result<Value, Error> {
                     Primitive::Integer(v) => val -= v,
                     _ => {
                         return Err(Error::new(&format!(
-                            "cannot compare type integer with type {}",
+                            "cannot subtract type integer with type {}",
                             arg
                         )))
                     }
@@ -125,7 +128,7 @@ fn eval_operator_subtract(values: Vec<Primitive>) -> Result<Value, Error> {
                     Primitive::Float(v) => val -= v,
                     _ => {
                         return Err(Error::new(&format!(
-                            "cannot compare type float with type {}",
+                            "cannot subtract type float with type {}",
                             arg
                         )))
                     }
@@ -135,5 +138,77 @@ fn eval_operator_subtract(values: Vec<Primitive>) -> Result<Value, Error> {
             Ok(Value::Primitive(Primitive::Float(val)))
         }
         val => Err(Error::new(&format!("cannot subtract type {}", val))),
+    }
+}
+
+fn eval_operator_multiply(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => val *= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot multiply type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Integer(val)))
+        }
+        Primitive::Float(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => val *= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot multiply type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Float(val)))
+        }
+        val => Err(Error::new(&format!("cannot multiply type {}", val))),
+    }
+}
+
+fn eval_operator_divide(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => val /= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot divide type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Integer(val)))
+        }
+        Primitive::Float(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => val /= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot divide type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Float(val)))
+        }
+        val => Err(Error::new(&format!("cannot divide type {}", val))),
     }
 }
