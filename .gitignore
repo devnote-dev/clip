@@ -1,3 +1,7 @@
 /.vscode
 /target
 /test
+
+*.cmd
+*.exe
+*.sh
