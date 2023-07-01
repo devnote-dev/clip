@@ -72,7 +72,7 @@ impl Parse for Assign {
 pub struct If {
     pub condition: Expression,
     pub consequence: Vec<Box<Statement>>,
-    // pub alternatives: Option<Box<If>>,
+    pub alternative: Option<Vec<Box<Statement>>>,
 }
 
 impl Parse for If {
@@ -88,6 +88,7 @@ impl Parse for If {
         }
 
         let mut consequence = Vec::new();
+
         loop {
             match p.peek_token() {
                 Token::EOF => return Err(Error::new("unexpected end of file")),
@@ -104,11 +105,40 @@ impl Parse for If {
             }
         }
 
-        // TODO: alternatives
+        let mut alternative = None;
+        if p.next_token() == &Token::Else {
+            if p.next_token() != &Token::BlockStart {
+                return Err(Error::new(&format!(
+                    "expected block start; got {}",
+                    p.current_token()
+                )));
+            }
+
+            let mut statements = Vec::new();
+
+            loop {
+                match p.peek_token() {
+                    Token::EOF => return Err(Error::new("unexpected end of file")),
+                    Token::Semicolon | Token::Newline => _ = p.next_token(),
+                    Token::BlockEnd => {
+                        _ = p.next_token();
+                        break;
+                    }
+                    _ => {
+                        _ = p.next_token();
+                        let stmt = Statement::parse(p)?;
+                        statements.push(Box::new(stmt));
+                    }
+                }
+            }
+
+            alternative = Some(statements);
+        }
 
         Ok(Self {
             condition,
             consequence,
+            alternative,
         })
     }
 }

@@ -39,6 +39,14 @@ impl Value {
                     Statement::Expression(v) => Value::eval_expr(v, scope)?,
                 };
             }
+        } else if let Some(alternative) = &i.alternative {
+            for alt in alternative {
+                match alt.as_ref() {
+                    Statement::Assign(v) => Value::eval_assign(v, scope)?,
+                    Statement::If(v) => Value::eval_if_condition(v, scope)?,
+                    Statement::Expression(v) => Value::eval_expr(v, scope)?,
+                };
+            }
         }
 
         Ok(Self::Primitive(Primitive::Null))
