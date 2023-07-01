@@ -37,7 +37,7 @@ impl Parser {
 
     pub fn peek_token(&self) -> &Token {
         if self.pos + 1 >= self.tokens.len() {
-            &Token::EOF
+            &self.tokens[self.tokens.len() - 1]
         } else {
             &self.tokens[self.pos + 1]
         }

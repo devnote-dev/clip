@@ -1,5 +1,5 @@
 use super::{Parse, Parser};
-use crate::{error::Error, lexer::token::Token};
+use crate::{error::Error, lexer::token::TokenValue};
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
 #[derive(Debug)]
@@ -12,14 +12,14 @@ impl Parse for Program {
         let mut statements = Vec::new();
 
         loop {
-            match p.current_token() {
-                Token::EOF => break,
-                Token::Semicolon | Token::Newline => {
+            match p.current_token().value {
+                TokenValue::EOF => break,
+                TokenValue::Semicolon | TokenValue::Newline => {
                     _ = p.next_token();
                 }
                 _ => {
                     statements.push(Statement::parse(p)?);
-                    if p.current_token() == Token::EOF {
+                    if p.current_token().value == TokenValue::EOF {
                         break;
                     }
                     _ = p.next_token();
@@ -40,9 +40,9 @@ pub enum Statement {
 
 impl Parse for Statement {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        match p.current_token() {
-            Token::Assign => Ok(Self::Assign(Assign::parse(p)?)),
-            Token::If => Ok(Self::If(If::parse(p)?)),
+        match p.current_token().value {
+            TokenValue::Assign => Ok(Self::Assign(Assign::parse(p)?)),
+            TokenValue::If => Ok(Self::If(If::parse(p)?)),
             _ => Ok(Self::Expression(Expression::parse(p)?)),
         }
     }
@@ -61,8 +61,10 @@ impl Parse for Assign {
         _ = p.next_token();
         let value = Expression::parse(p)?;
 
-        match p.peek_token() {
-            Token::EOF | Token::Semicolon | Token::Newline => Ok(Self { name, value }),
+        match &p.peek_token().value {
+            TokenValue::EOF | TokenValue::Semicolon | TokenValue::Newline => {
+                Ok(Self { name, value })
+            }
             t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
@@ -80,20 +82,20 @@ impl Parse for If {
         _ = p.next_token();
         let condition = Expression::parse(p)?;
 
-        if p.next_token() != &Token::BlockStart {
+        if p.next_token().value != TokenValue::BlockStart {
             return Err(Error::new(&format!(
                 "expected block start; got {}",
-                p.current_token()
+                p.current_token().value
             )));
         }
 
         let mut consequence = Vec::new();
 
         loop {
-            match p.peek_token() {
-                Token::EOF => return Err(Error::new("unexpected end of file")),
-                Token::Semicolon | Token::Newline => _ = p.next_token(),
-                Token::BlockEnd => {
+            match p.peek_token().value {
+                TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
+                TokenValue::BlockEnd => {
                     _ = p.next_token();
                     break;
                 }
@@ -106,21 +108,21 @@ impl Parse for If {
         }
 
         let mut alternative = None;
-        if p.next_token() == &Token::Else {
-            if p.next_token() != &Token::BlockStart {
+        if p.next_token().value == TokenValue::Else {
+            if p.next_token().value != TokenValue::BlockStart {
                 return Err(Error::new(&format!(
                     "expected block start; got {}",
-                    p.current_token()
+                    p.current_token().value
                 )));
             }
 
             let mut statements = Vec::new();
 
             loop {
-                match p.peek_token() {
-                    Token::EOF => return Err(Error::new("unexpected end of file")),
-                    Token::Semicolon | Token::Newline => _ = p.next_token(),
-                    Token::BlockEnd => {
+                match p.peek_token().value {
+                    TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                    TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
+                    TokenValue::BlockEnd => {
                         _ = p.next_token();
                         break;
                     }
@@ -156,35 +158,37 @@ pub enum Expression {
 
 impl Expression {
     fn parse_non_call(p: &mut Parser) -> Result<Self, Error> {
-        match p.current_token() {
-            Token::LeftParen => {
-                if p.next_token() == &Token::RightParen {
+        match p.current_token().value {
+            TokenValue::LeftParen => {
+                if p.next_token().value == TokenValue::RightParen {
                     return Ok(Self::Primitive(Primitive::Null));
                 }
 
                 let expr = Expression::parse(p)?;
-                let t = p.peek_token();
+                let t = &p.peek_token().value;
 
-                if t == &Token::RightParen {
+                if t == &TokenValue::RightParen {
                     _ = p.next_token();
                     Ok(expr)
                 } else {
                     Err(Error::new(&format!("expected right paren; got {t}")))
                 }
             }
-            Token::And => Ok(Self::And(And::parse(p)?)),
-            Token::Or => Ok(Self::Or(Or::parse(p)?)),
-            Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
-            Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
-                Ok(Self::Primitive(Primitive::parse(p)?))
-            }
-            Token::Ident(_) => Ok(Self::Identifier(Identifier::parse(p)?)),
-            Token::Equal
-            | Token::Plus
-            | Token::Minus
-            | Token::Asterisk
-            | Token::Slash
-            | Token::Bang => Ok(Self::Operator(Operator::parse(p)?)),
+            TokenValue::And => Ok(Self::And(And::parse(p)?)),
+            TokenValue::Or => Ok(Self::Or(Or::parse(p)?)),
+            TokenValue::BlockStart => Ok(Self::Function(Function::parse(p)?)),
+            TokenValue::Integer(_)
+            | TokenValue::Float(_)
+            | TokenValue::String(_)
+            | TokenValue::True
+            | TokenValue::False => Ok(Self::Primitive(Primitive::parse(p)?)),
+            TokenValue::Ident(_) => Ok(Self::Identifier(Identifier::parse(p)?)),
+            TokenValue::Equal
+            | TokenValue::Plus
+            | TokenValue::Minus
+            | TokenValue::Asterisk
+            | TokenValue::Slash
+            | TokenValue::Bang => Ok(Self::Operator(Operator::parse(p)?)),
             t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
@@ -192,40 +196,42 @@ impl Expression {
 
 impl Parse for Expression {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        match p.current_token() {
-            Token::LeftParen => {
-                if p.next_token() == &Token::RightParen {
+        match p.current_token().value {
+            TokenValue::LeftParen => {
+                if p.next_token().value == TokenValue::RightParen {
                     return Ok(Self::Primitive(Primitive::Null));
                 }
 
                 let expr = Expression::parse(p)?;
-                let t = p.peek_token();
+                let t = &p.peek_token().value;
 
-                if t == &Token::RightParen {
+                if t == &TokenValue::RightParen {
                     _ = p.next_token();
                     Ok(expr)
                 } else {
                     Err(Error::new(&format!("expected right paren; got {t}")))
                 }
             }
-            Token::And => Ok(Self::And(And::parse(p)?)),
-            Token::Or => Ok(Self::Or(Or::parse(p)?)),
-            Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
-            Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
-                Ok(Self::Primitive(Primitive::parse(p)?))
-            }
-            Token::Ident(_) => match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline => {
+            TokenValue::And => Ok(Self::And(And::parse(p)?)),
+            TokenValue::Or => Ok(Self::Or(Or::parse(p)?)),
+            TokenValue::BlockStart => Ok(Self::Function(Function::parse(p)?)),
+            TokenValue::Integer(_)
+            | TokenValue::Float(_)
+            | TokenValue::String(_)
+            | TokenValue::True
+            | TokenValue::False => Ok(Self::Primitive(Primitive::parse(p)?)),
+            TokenValue::Ident(_) => match p.peek_token().value {
+                TokenValue::EOF | TokenValue::Semicolon | TokenValue::Newline => {
                     Ok(Self::Identifier(Identifier::parse(p)?))
                 }
                 _ => Ok(Self::Call(Call::parse(p)?)),
             },
-            Token::Equal
-            | Token::Plus
-            | Token::Minus
-            | Token::Asterisk
-            | Token::Slash
-            | Token::Bang => Ok(Self::Operator(Operator::parse(p)?)),
+            TokenValue::Equal
+            | TokenValue::Plus
+            | TokenValue::Minus
+            | TokenValue::Asterisk
+            | TokenValue::Slash
+            | TokenValue::Bang => Ok(Self::Operator(Operator::parse(p)?)),
             t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
@@ -242,12 +248,12 @@ pub enum Primitive {
 
 impl Parse for Primitive {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        Ok(match p.current_token() {
-            Token::Integer(v) => Self::Integer(v.parse()?),
-            Token::Float(v) => Self::Float(v.parse()?),
-            Token::String(v) => Self::String(v),
-            Token::True => Self::Boolean(true),
-            Token::False => Self::Boolean(false),
+        Ok(match p.current_token().value {
+            TokenValue::Integer(v) => Self::Integer(v.parse()?),
+            TokenValue::Float(v) => Self::Float(v.parse()?),
+            TokenValue::String(v) => Self::String(v),
+            TokenValue::True => Self::Boolean(true),
+            TokenValue::False => Self::Boolean(false),
             _ => unreachable!(),
         })
     }
@@ -272,8 +278,8 @@ pub struct Identifier {
 
 impl Parse for Identifier {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        match p.current_token() {
-            Token::Ident(value) => Ok(Self { value }),
+        match p.current_token().value {
+            TokenValue::Ident(value) => Ok(Self { value }),
             t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
@@ -287,21 +293,24 @@ pub struct Operator {
 
 impl Parse for Operator {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
-        let kind = match p.current_token() {
-            Token::Equal => OperatorKind::Equal,
-            Token::Plus => OperatorKind::Add,
-            Token::Minus => OperatorKind::Subtract,
-            Token::Asterisk => OperatorKind::Multiply,
-            Token::Slash => OperatorKind::Divide,
-            Token::Bang => OperatorKind::Inverse,
+        let kind = match p.current_token().value {
+            TokenValue::Equal => OperatorKind::Equal,
+            TokenValue::Plus => OperatorKind::Add,
+            TokenValue::Minus => OperatorKind::Subtract,
+            TokenValue::Asterisk => OperatorKind::Multiply,
+            TokenValue::Slash => OperatorKind::Divide,
+            TokenValue::Bang => OperatorKind::Inverse,
             _ => unreachable!(),
         };
 
         let mut args = Vec::new();
 
         loop {
-            match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+            match p.peek_token().value {
+                TokenValue::EOF
+                | TokenValue::Semicolon
+                | TokenValue::Newline
+                | TokenValue::RightParen => break,
                 _ => {
                     _ = p.next_token();
                     match Expression::parse_non_call(p) {
@@ -349,16 +358,16 @@ impl Parse for Function {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let mut params = Vec::new();
 
-        if p.next_token() == &Token::LeftBracket {
-            match p.next_token() {
-                Token::EOF => return Err(Error::new("unexpected end of file")),
-                Token::RightBracket => _ = p.next_token(),
+        if p.next_token().value == TokenValue::LeftBracket {
+            match p.next_token().value {
+                TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                TokenValue::RightBracket => _ = p.next_token(),
                 _ => {
                     params.push(Identifier::parse(p)?);
                     loop {
-                        match p.next_token() {
-                            Token::EOF => return Err(Error::new("unexpected end of file")),
-                            Token::RightBracket => {
+                        match p.next_token().value {
+                            TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                            TokenValue::RightBracket => {
                                 _ = p.next_token();
                                 break;
                             }
@@ -372,16 +381,16 @@ impl Parse for Function {
         let mut body = Vec::new();
 
         loop {
-            match p.current_token() {
-                Token::EOF => return Err(Error::new("unexpected end of file")),
-                Token::Semicolon | Token::Newline => _ = p.next_token(),
-                Token::BlockEnd => {
+            match p.current_token().value {
+                TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
+                TokenValue::BlockEnd => {
                     _ = p.next_token();
                     break;
                 }
                 _ => {
                     body.push(Statement::parse(p)?);
-                    if p.current_token() == Token::BlockEnd {
+                    if p.current_token().value == TokenValue::BlockEnd {
                         break;
                     }
                     _ = p.next_token();
@@ -405,8 +414,11 @@ impl Parse for Call {
         let mut args = Vec::new();
 
         loop {
-            match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+            match p.peek_token().value {
+                TokenValue::EOF
+                | TokenValue::Semicolon
+                | TokenValue::Newline
+                | TokenValue::RightParen => break,
                 _ => {
                     _ = p.next_token();
                     args.push(Expression::parse(p)?);
@@ -426,8 +438,11 @@ impl Parse for And {
         let mut args = Vec::new();
 
         loop {
-            match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+            match p.peek_token().value {
+                TokenValue::EOF
+                | TokenValue::Semicolon
+                | TokenValue::Newline
+                | TokenValue::RightParen => break,
                 _ => {
                     _ = p.next_token();
                     args.push(Expression::parse(p)?);
@@ -447,8 +462,11 @@ impl Parse for Or {
         let mut args = Vec::new();
 
         loop {
-            match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+            match p.peek_token().value {
+                TokenValue::EOF
+                | TokenValue::Semicolon
+                | TokenValue::Newline
+                | TokenValue::RightParen => break,
                 _ => {
                     _ = p.next_token();
                     args.push(Expression::parse(p)?);
