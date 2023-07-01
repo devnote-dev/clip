@@ -126,7 +126,7 @@ impl Display for Location {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
-            "{}:{}-{}:{}",
+            "{}:{}, {}:{}",
             self.line_start, self.line_stop, self.col_start, self.col_stop
         )
     }
