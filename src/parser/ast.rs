@@ -218,11 +218,7 @@ impl Parse for Operator {
 
         loop {
             match p.peek_token() {
-                Token::EOF | Token::Semicolon | Token::Newline => break,
-                Token::RightParen => {
-                    _ = p.next_token();
-                    break;
-                }
+                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
                 _ => {
                     _ = p.next_token();
                     match Expression::parse_non_call(p) {
