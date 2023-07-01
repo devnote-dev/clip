@@ -36,6 +36,8 @@ There are primitive data types such as integers, floats, strings and booleans as
 
 | Definition   | Description                                                            |
 | ------------ | ---------------------------------------------------------------------- |
+| `&& a b ...` | Logic And: checks if all arguments are _truthy_.                       |
+| `|| a b ...` | Logic Or: checks if at least one argument is _truthy_.                 |
 | `== a b ...` | Equality: checks if `a` is equal to any of the other arguments.        |
 | `+ a b ...`  | Addition: adds all the arguments sequentially.                         |
 | `- a b ...`  | Subtraction: subtracts all the arguments sequentially.                 |
@@ -66,9 +68,26 @@ Note that calling a function that has a singular argument with `()` still works:
 is_null () # boolean : true
 ```
 
+<!--
+## Control Flow
+
+Control flow in the form of `if` and `else` statements is possible (`elif` coming soon). Here's fibonacci (it actually works):
+
+```
+= fib { [n]
+    if || (== n 0) (== n 1) {
+        1;
+    } else {
+        + fib (- n 2) (- n 1);
+    }
+}
+
+fib 12 # integer : 233
+```
+-->
+
 ## Development
 
-- Logic operators and/or (`&&` / `||`)
 - Control statements (`if`, `elif`, `else`, `for`)
 - Module management (`import`, `export`)
 - Method calls
