@@ -14,7 +14,7 @@ You can run the interpreter via `cargo run <file>` or start the REPL with just `
 
 ## Syntax
 
-The language can be best described as lisp without the parentheses — everything is declared and read left to right.
+The language can be best described as lisp without the parentheses, everything is declared and read left to right. Comments are declared using `#` unlike lisp — semicolons actually have meaning (they are delimiters, as they should be).
 
 ### Variables
 

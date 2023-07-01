@@ -41,6 +41,19 @@ impl<'a> Lexer<'a> {
                         res.push(Token::Semicolon);
                         _ = self.input.next();
                     }
+                    '#' => loop {
+                        match self.input.next() {
+                            Some(c) => {
+                                if c == '\n' {
+                                    break;
+                                }
+                            }
+                            None => {
+                                res.push(Token::EOF);
+                                break;
+                            }
+                        }
+                    },
                     '(' => {
                         res.push(Token::LeftParen);
                         _ = self.input.next();
