@@ -147,7 +147,7 @@ impl<'a> Lexer<'a> {
                         match self.input.peek() {
                             Some(&c) => {
                                 if c == '|' {
-                                    res.push(Token::And);
+                                    res.push(Token::Or);
                                     _ = self.input.next();
                                 } else {
                                     res.push(Token::Illegal("unexpected: |".to_string()));

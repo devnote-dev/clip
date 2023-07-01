@@ -1,7 +1,7 @@
 use super::{ops, Scope};
 use crate::{
     error::Error,
-    parser::ast::{And, Assign, Call, Expression, Function, Primitive, Statement},
+    parser::ast::{And, Assign, Call, Expression, Function, Or, Primitive, Statement},
 };
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -30,6 +30,7 @@ impl Value {
             Expression::Function(v) => Ok(Self::Function(v.clone())),
             Expression::Call(v) => Value::eval_call(v.clone(), scope),
             Expression::And(v) => Value::eval_logic_and(v.clone(), scope),
+            Expression::Or(v) => Value::eval_logic_or(v.clone(), scope),
         }
     }
 
@@ -108,6 +109,27 @@ impl Value {
         }
 
         Ok(Value::Primitive(Primitive::Boolean(true)))
+    }
+
+    fn eval_logic_or(or: Or, scope: &mut Scope) -> Result<Self, Error> {
+        let mut values = Vec::new();
+
+        for expr in &or.0 {
+            values.push(Value::eval_expr(expr, scope)?);
+        }
+
+        for val in values {
+            match val {
+                Value::Primitive(p) => match p {
+                    Primitive::Boolean(v) if !v => (),
+                    Primitive::Null => (),
+                    _ => return Ok(Value::Primitive(Primitive::Boolean(true))),
+                },
+                Value::Function(_) => return Ok(Value::Primitive(Primitive::Boolean(true))),
+            }
+        }
+
+        Ok(Value::Primitive(Primitive::Boolean(false)))
     }
 
     pub fn value(&self) -> String {

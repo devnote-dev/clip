@@ -74,6 +74,7 @@ pub enum Expression {
     Function(Function),
     Call(Call),
     And(And),
+    Or(Or),
 }
 
 impl Expression {
@@ -95,6 +96,7 @@ impl Expression {
                 }
             }
             Token::And => Ok(Self::And(And::parse(p)?)),
+            Token::Or => Ok(Self::Or(Or::parse(p)?)),
             Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
@@ -130,6 +132,7 @@ impl Parse for Expression {
                 }
             }
             Token::And => Ok(Self::And(And::parse(p)?)),
+            Token::Or => Ok(Self::Or(Or::parse(p)?)),
             Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
@@ -342,6 +345,27 @@ impl Parse for Call {
 pub struct And(pub Vec<Expression>);
 
 impl Parse for And {
+    fn parse(p: &mut Parser) -> Result<Self, Error> {
+        let mut args = Vec::new();
+
+        loop {
+            match p.peek_token() {
+                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+                _ => {
+                    _ = p.next_token();
+                    args.push(Expression::parse(p)?);
+                }
+            }
+        }
+
+        Ok(Self(args))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct Or(pub Vec<Expression>);
+
+impl Parse for Or {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let mut args = Vec::new();
 
