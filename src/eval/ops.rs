@@ -37,12 +37,101 @@ pub fn eval_operator(op: Operator, scope: &mut Scope) -> Result<Value, Error> {
     }
 
     match op.kind {
+        OperatorKind::Equal => eval_operator_equal(values),
         OperatorKind::Add => eval_operator_add(values),
         OperatorKind::Subtract => eval_operator_subtract(values),
         OperatorKind::Multiply => eval_operator_multiply(values),
         OperatorKind::Divide => eval_operator_divide(values),
-        OperatorKind::Equal => todo!(),
         OperatorKind::Inverse => unreachable!(),
+    }
+}
+
+fn eval_operator_equal(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => res = val == v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Float(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => res = val == v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::String(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::String(v) => res = val == v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type string with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Boolean(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Boolean(v) => res = val == v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type boolean with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Null => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Null => res = true,
+                    _ => res = false,
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
     }
 }
 
