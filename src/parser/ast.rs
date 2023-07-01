@@ -322,9 +322,12 @@ impl Parse for Call {
         let mut args = Vec::new();
 
         loop {
-            match p.next_token() {
-                Token::EOF | Token::Semicolon | Token::Newline => break,
-                _ => args.push(Expression::parse(p)?),
+            match p.peek_token() {
+                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+                _ => {
+                    _ = p.next_token();
+                    args.push(Expression::parse(p)?);
+                }
             }
         }
 
