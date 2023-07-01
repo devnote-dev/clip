@@ -38,6 +38,7 @@ pub fn eval_operator(op: Operator, scope: &mut Scope) -> Result<Value, Error> {
 
     match op.kind {
         OperatorKind::Add => eval_operator_add(values),
+        OperatorKind::Subtract => eval_operator_subtract(values),
         _ => todo!(),
     }
 }
@@ -97,6 +98,42 @@ fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
 
             Ok(Value::Primitive(Primitive::String(res)))
         }
-        val => Err(Error::new(&format!("cannot compare type {}", val))),
+        val => Err(Error::new(&format!("cannot add type {}", val))),
+    }
+}
+
+fn eval_operator_subtract(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => val -= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Integer(val)))
+        }
+        Primitive::Float(mut val) => {
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => val -= v,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Float(val)))
+        }
+        val => Err(Error::new(&format!("cannot subtract type {}", val))),
     }
 }
