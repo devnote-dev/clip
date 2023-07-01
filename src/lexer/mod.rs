@@ -57,6 +57,14 @@ impl<'a> Lexer<'a> {
                         res.push(Token::RightBracket);
                         _ = self.input.next();
                     }
+                    '{' => {
+                        res.push(Token::BlockStart);
+                        _ = self.input.next();
+                    }
+                    '}' => {
+                        res.push(Token::BlockEnd);
+                        _ = self.input.next();
+                    }
                     '=' => {
                         _ = self.input.next();
                         match self.input.peek() {
@@ -78,20 +86,8 @@ impl<'a> Lexer<'a> {
                         _ = self.input.next();
                     }
                     '-' => {
+                        res.push(Token::Minus);
                         _ = self.input.next();
-                        match self.input.peek() {
-                            Some(&c) => {
-                                if c == '>' {
-                                    res.push(Token::BlockStart);
-                                    _ = self.input.next();
-                                } else {
-                                    res.push(Token::Minus);
-                                }
-                            }
-                            None => {
-                                res.push(Token::Minus);
-                            }
-                        }
                     }
                     '<' => {
                         _ = self.input.next();
