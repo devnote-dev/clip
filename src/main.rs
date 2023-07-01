@@ -13,6 +13,8 @@ struct Args {
     token: bool,
     #[arg(short, long)]
     parse: bool,
+    #[arg(short, long)]
+    display: bool,
     file: Option<String>,
 }
 
@@ -30,6 +32,12 @@ fn main() {
 
     match fs::read_to_string(args.file.unwrap()) {
         Ok(input) => {
+            if args.display {
+                for line in input.lines() {
+                    println!("# {}", line);
+                }
+            }
+
             let tokens = Lexer::new(&input).lex();
             if args.token {
                 for token in &tokens {
