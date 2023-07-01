@@ -83,6 +83,7 @@ fn run(path: String, display: bool, show_token: bool, show_parse: bool) {
                         for stmt in &p.statements {
                             match stmt {
                                 Statement::Assign(a) => println!("{:#?}", a),
+                                Statement::If(_) => println!("null"),
                                 Statement::Expression(e) => println!("{:#?}", e),
                             }
                         }

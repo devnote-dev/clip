@@ -254,6 +254,9 @@ impl<'a> Lexer<'a> {
         }
 
         match ident.as_str() {
+            "if" => Token::If,
+            "elif" => Token::Elif,
+            "else" => Token::Else,
             "true" => Token::True,
             "false" => Token::False,
             _ => Token::Ident(ident),

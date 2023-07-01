@@ -1,7 +1,7 @@
 use super::{ops, Scope};
 use crate::{
     error::Error,
-    parser::ast::{And, Assign, Call, Expression, Function, Or, Primitive, Statement},
+    parser::ast::{And, Assign, Call, Expression, Function, If, Or, Primitive, Statement},
 };
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -17,6 +17,31 @@ impl Value {
         scope.set(&a.name, &value);
 
         Ok(value)
+    }
+
+    pub fn eval_if_condition(i: &If, scope: &mut Scope) -> Result<Self, Error> {
+        let condition = match Value::eval_expr(&i.condition, scope)? {
+            Value::Primitive(p) => match p {
+                Primitive::Boolean(v) => v,
+                Primitive::Null => false,
+                _ => true,
+            },
+            Value::Function(_) => {
+                return Err(Error::new("cannot use type function as a condition"))
+            }
+        };
+
+        if condition {
+            for cons in &i.consequence {
+                match cons.as_ref() {
+                    Statement::Assign(v) => Value::eval_assign(v, scope)?,
+                    Statement::If(v) => Value::eval_if_condition(v, scope)?,
+                    Statement::Expression(v) => Value::eval_expr(v, scope)?,
+                };
+            }
+        }
+
+        Ok(Self::Primitive(Primitive::Null))
     }
 
     pub fn eval_expr(e: &Expression, scope: &mut Scope) -> Result<Self, Error> {
@@ -76,6 +101,7 @@ impl Value {
                 for stmt in &fun.body {
                     match stmt {
                         Statement::Assign(a) => result = Self::eval_assign(a, &mut child)?,
+                        Statement::If(i) => result = Self::eval_if_condition(i, &mut child)?,
                         Statement::Expression(e) => result = Self::eval_expr(e, &mut child)?,
                     }
                 }

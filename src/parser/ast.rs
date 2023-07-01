@@ -34,6 +34,7 @@ impl Parse for Program {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Statement {
     Assign(Assign),
+    If(If),
     Expression(Expression),
 }
 
@@ -41,6 +42,7 @@ impl Parse for Statement {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         match p.current_token() {
             Token::Assign => Ok(Self::Assign(Assign::parse(p)?)),
+            Token::If => Ok(Self::If(If::parse(p)?)),
             _ => Ok(Self::Expression(Expression::parse(p)?)),
         }
     }
@@ -63,6 +65,51 @@ impl Parse for Assign {
             Token::EOF | Token::Semicolon | Token::Newline => Ok(Self { name, value }),
             t => Err(Error::new(&format!("unexpected token {t}"))),
         }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct If {
+    pub condition: Expression,
+    pub consequence: Vec<Box<Statement>>,
+    // pub alternatives: Option<Box<If>>,
+}
+
+impl Parse for If {
+    fn parse(p: &mut Parser) -> Result<Self, Error> {
+        _ = p.next_token();
+        let condition = Expression::parse(p)?;
+
+        if p.next_token() != &Token::BlockStart {
+            return Err(Error::new(&format!(
+                "expected block start; got {}",
+                p.current_token()
+            )));
+        }
+
+        let mut consequence = Vec::new();
+        loop {
+            match p.peek_token() {
+                Token::EOF => return Err(Error::new("unexpected end of file")),
+                Token::Semicolon | Token::Newline => _ = p.next_token(),
+                Token::BlockEnd => {
+                    _ = p.next_token();
+                    break;
+                }
+                _ => {
+                    _ = p.next_token();
+                    let stmt = Statement::parse(p)?;
+                    consequence.push(Box::new(stmt));
+                }
+            }
+        }
+
+        // TODO: alternatives
+
+        Ok(Self {
+            condition,
+            consequence,
+        })
     }
 }
 

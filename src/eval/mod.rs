@@ -14,6 +14,7 @@ pub fn eval(program: Program, scope: &mut Scope) -> Result<Value, Error> {
     for stmt in &program.statements {
         match stmt {
             Statement::Assign(a) => result = Value::eval_assign(a, scope)?,
+            Statement::If(i) => result = Value::eval_if_condition(i, scope)?,
             Statement::Expression(e) => result = Value::eval_expr(e, scope)?,
         }
     }
