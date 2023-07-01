@@ -72,7 +72,7 @@ fn run(path: String, display: bool, show_token: bool, show_parse: bool) {
             let tokens = Lexer::new(&input).lex();
             if show_token {
                 for token in &tokens {
-                    println!("{:?}", token);
+                    println!("{}", token);
                 }
                 return;
             }
