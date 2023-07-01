@@ -1,22 +1,19 @@
-use std::{iter::Peekable, str::Chars};
-
 use self::token::{Location, Token, TokenValue};
+use std::{iter::Peekable, str::Chars};
 
 pub mod token;
 
 #[derive(Debug)]
 pub struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
-    line: i32,
-    col: i32,
+    loc: Location,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         Self {
             input: input.chars().peekable(),
-            line: 0,
-            col: 0,
+            loc: Location::new(0, 0),
         }
     }
 
@@ -24,37 +21,31 @@ impl<'a> Lexer<'a> {
         let mut res = Vec::new();
 
         loop {
-            let loc = Location::new(0, 0);
-
             match self.input.peek() {
                 Some(&c) => match c {
                     ' ' | '\t' => {
-                        _ = self.input.next();
+                        self.next();
+                        self.loc.col_start = self.loc.col_stop;
                     }
                     '\r' => {
                         if let Some(c) = self.input.next() {
                             if c == '\n' {
-                                res.push(Token::new(
-                                    TokenValue::Newline,
-                                    loc.stop(self.line, self.col),
-                                ));
-                                _ = self.input.next();
+                                res.push(Token::new(TokenValue::Newline, self.loc()));
+                                self.next();
+                                self.loc.line_start += 1;
+                                self.loc.col_stop = 0;
                             }
                         }
                     }
                     '\n' => {
-                        res.push(Token::new(
-                            TokenValue::Newline,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Newline, self.loc()));
+                        self.next();
+                        self.loc.line_start += 1;
+                        self.loc.col_stop = 0;
                     }
                     ';' => {
-                        res.push(Token::new(
-                            TokenValue::Semicolon,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Semicolon, self.loc()));
+                        self.next();
                     }
                     '#' => loop {
                         match self.input.next() {
@@ -64,167 +55,128 @@ impl<'a> Lexer<'a> {
                                 }
                             }
                             None => {
-                                res.push(Token::new(
-                                    TokenValue::EOF,
-                                    loc.stop(self.line, self.col),
-                                ));
+                                res.push(Token::new(TokenValue::EOF, self.loc()));
                                 break;
                             }
                         }
                     },
                     '(' => {
-                        res.push(Token::new(
-                            TokenValue::LeftParen,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::LeftParen, self.loc()));
+                        self.next();
                     }
                     ')' => {
-                        res.push(Token::new(
-                            TokenValue::RightParen,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::RightParen, self.loc()));
+                        self.next();
                     }
                     '[' => {
-                        res.push(Token::new(
-                            TokenValue::LeftBracket,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::LeftBracket, self.loc()));
+                        self.next();
                     }
                     ']' => {
-                        res.push(Token::new(
-                            TokenValue::RightBracket,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::RightBracket, self.loc()));
+                        self.next();
                     }
                     '{' => {
-                        res.push(Token::new(
-                            TokenValue::BlockStart,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::BlockStart, self.loc()));
+                        self.next();
                     }
                     '}' => {
-                        res.push(Token::new(
-                            TokenValue::BlockEnd,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::BlockEnd, self.loc()));
+                        self.next();
                     }
                     '=' => {
-                        _ = self.input.next();
+                        self.next();
                         match self.input.peek() {
                             Some(&c) => {
                                 if c == '=' {
-                                    res.push(Token::new(
-                                        TokenValue::Equal,
-                                        loc.stop(self.line, self.col),
-                                    ));
-                                    _ = self.input.next();
+                                    res.push(Token::new(TokenValue::Equal, self.loc()));
+                                    self.next();
                                 } else {
-                                    res.push(Token::new(
-                                        TokenValue::Assign,
-                                        loc.stop(self.line, self.col),
-                                    ));
+                                    res.push(Token::new(TokenValue::Assign, self.loc()));
                                 }
                             }
                             None => {
-                                res.push(Token::new(
-                                    TokenValue::Assign,
-                                    loc.stop(self.line, self.col),
-                                ));
+                                res.push(Token::new(TokenValue::Assign, self.loc()));
                             }
                         }
                     }
                     '+' => {
-                        res.push(Token::new(TokenValue::Plus, loc.stop(self.line, self.col)));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Plus, self.loc()));
+                        self.next();
                     }
                     '-' => {
-                        res.push(Token::new(TokenValue::Minus, loc.stop(self.line, self.col)));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Minus, self.loc()));
+                        self.next();
                     }
                     '*' => {
-                        res.push(Token::new(
-                            TokenValue::Asterisk,
-                            loc.stop(self.line, self.col),
-                        ));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Asterisk, self.loc()));
+                        self.next();
                     }
                     '/' => {
-                        res.push(Token::new(TokenValue::Slash, loc.stop(self.line, self.col)));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Slash, self.loc()));
+                        self.next();
                     }
                     '&' => {
-                        _ = self.input.next();
+                        self.next();
                         match self.input.peek() {
                             Some(&c) => {
                                 if c == '&' {
-                                    res.push(Token::new(
-                                        TokenValue::And,
-                                        loc.stop(self.line, self.col),
-                                    ));
-                                    _ = self.input.next();
+                                    res.push(Token::new(TokenValue::And, self.loc()));
+                                    self.next();
                                 } else {
                                     res.push(Token::new(
                                         TokenValue::Illegal("unexpected: &".to_string()),
-                                        loc.stop(self.line, self.col),
+                                        self.loc(),
                                     ));
                                 }
                             }
                             None => {
                                 res.push(Token::new(
                                     TokenValue::Illegal("unexpected: &".to_string()),
-                                    loc.stop(self.line, self.col),
+                                    self.loc(),
                                 ));
                             }
                         }
                     }
                     '|' => {
-                        _ = self.input.next();
+                        self.next();
                         match self.input.peek() {
                             Some(&c) => {
                                 if c == '|' {
-                                    res.push(Token::new(
-                                        TokenValue::Or,
-                                        loc.stop(self.line, self.col),
-                                    ));
-                                    _ = self.input.next();
+                                    res.push(Token::new(TokenValue::Or, self.loc()));
+                                    self.next();
                                 } else {
                                     res.push(Token::new(
                                         TokenValue::Illegal("unexpected: |".to_string()),
-                                        loc.stop(self.line, self.col),
+                                        self.loc(),
                                     ));
                                 }
                             }
                             None => {
                                 res.push(Token::new(
                                     TokenValue::Illegal("unexpected: |".to_string()),
-                                    loc.stop(self.line, self.col),
+                                    self.loc(),
                                 ));
                             }
                         }
                     }
                     '!' => {
-                        res.push(Token::new(TokenValue::Bang, loc.stop(self.line, self.col)));
-                        _ = self.input.next();
+                        res.push(Token::new(TokenValue::Bang, self.loc()));
+                        self.next();
                     }
-                    '0'..='9' => res.push(self.lex_int_or_float(loc)),
-                    '"' => res.push(self.lex_string(loc)),
-                    'a'..='z' | 'A'..='Z' | '_' => res.push(self.lex_ident(loc)),
+                    '0'..='9' => res.push(self.lex_int_or_float()),
+                    '"' => res.push(self.lex_string()),
+                    'a'..='z' | 'A'..='Z' | '_' => res.push(self.lex_ident()),
                     _ => {
                         res.push(Token::new(
                             TokenValue::Illegal(format!("unexpected: {c}")),
-                            loc.stop(self.line, self.col),
+                            self.loc(),
                         ));
-                        _ = self.input.next();
+                        self.next();
                     }
                 },
                 None => {
-                    res.push(Token::new(TokenValue::EOF, loc.stop(self.line, self.col)));
+                    res.push(Token::new(TokenValue::EOF, self.loc()));
                     break;
                 }
             }
@@ -233,7 +185,7 @@ impl<'a> Lexer<'a> {
         res
     }
 
-    fn lex_int_or_float(&mut self, loc: Location) -> Token {
+    fn lex_int_or_float(&mut self) -> Token {
         let mut value = String::new();
         let mut float = false;
 
@@ -241,36 +193,36 @@ impl<'a> Lexer<'a> {
             match c {
                 '0'..='9' => {
                     value.push(c);
-                    _ = self.input.next();
+                    self.next();
                 }
                 '_' => continue,
                 '.' => {
                     if float {
-                        _ = self.input.next();
+                        self.next();
                         return Token::new(
                             TokenValue::Illegal(format!("unexpected: {c}")),
-                            loc.stop(self.line, self.col),
+                            self.loc(),
                         );
                     }
                     float = true;
                     value.push('.');
-                    _ = self.input.next();
+                    self.next();
                 }
                 _ => break,
             }
         }
 
         if float {
-            Token::new(TokenValue::Float(value), loc.stop(self.line, self.col))
+            Token::new(TokenValue::Float(value), self.loc())
         } else {
-            Token::new(TokenValue::Integer(value), loc.stop(self.line, self.col))
+            Token::new(TokenValue::Integer(value), self.loc())
         }
     }
 
-    fn lex_string(&mut self, loc: Location) -> Token {
+    fn lex_string(&mut self) -> Token {
         let mut string = String::new();
         let mut escaped = false;
-        _ = self.input.next();
+        self.next();
 
         loop {
             match self.input.peek() {
@@ -281,35 +233,32 @@ impl<'a> Lexer<'a> {
                             escaped = false;
                             continue;
                         }
-                        _ = self.input.next();
-                        break Token::new(
-                            TokenValue::String(string),
-                            loc.stop(self.line, self.col),
-                        );
+                        self.next();
+                        break Token::new(TokenValue::String(string), self.loc());
                     }
                     _ => {
                         string.push(c);
-                        _ = self.input.next();
+                        self.next();
                     }
                 },
                 None => {
                     break Token::new(
                         TokenValue::Illegal("unterminated quote string".to_string()),
-                        loc.stop(self.line, self.col),
+                        self.loc(),
                     );
                 }
             }
         }
     }
 
-    fn lex_ident(&mut self, loc: Location) -> Token {
+    fn lex_ident(&mut self) -> Token {
         let mut ident = String::new();
 
         while let Some(&c) = self.input.peek() {
             match c {
                 'a'..='z' | 'A'..='Z' | '_' => {
                     ident.push(c);
-                    _ = self.input.next();
+                    self.next();
                 }
                 _ => break,
             }
@@ -324,7 +273,20 @@ impl<'a> Lexer<'a> {
             _ => TokenValue::Ident(ident),
         };
 
-        Token::new(value, loc.stop(self.line, self.col))
+        Token::new(value, self.loc())
+    }
+
+    fn next(&mut self) {
+        _ = self.input.next();
+        self.loc.col_stop += 1;
+    }
+
+    fn loc(&mut self) -> Location {
+        let loc = self.loc.clone();
+        self.loc.line_stop = self.loc.line_start;
+        self.loc.col_start = self.loc.col_stop;
+
+        loc
     }
 }
 
