@@ -1,4 +1,4 @@
-use clap::Parser as ClapParser;
+use clap::{Parser as ClapParser, Subcommand};
 use clip::{
     eval::{eval, Scope},
     lexer::Lexer,
@@ -8,38 +8,69 @@ use clip::{
 use std::fs;
 
 #[derive(ClapParser)]
+#[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
-    token: bool,
-    #[arg(short, long)]
-    parse: bool,
-    #[arg(short, long)]
-    display: bool,
-    file: Option<String>,
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Run a clip script file
+    Run {
+        /// Display the input script as comments
+        #[arg(short, long)]
+        display: bool,
+        /// Print the parsed abstract syntax tree
+        #[arg(short, long)]
+        parse: bool,
+        /// Print the parsed tokens
+        #[arg(short, long)]
+        token: bool,
+        /// The input file
+        file: String,
+    },
+    /// Start the clip interpreter repl
+    Repl {
+        /// Print the parsed abstract syntax tree
+        #[arg(short, long)]
+        parse: bool,
+        /// Print the parsed tokens
+        #[arg(short, long)]
+        token: bool,
+    },
 }
 
 fn main() {
     let args = Args::parse();
 
-    if args.token && args.parse {
+    match args.command {
+        Commands::Run {
+            display,
+            parse,
+            token,
+            file,
+        } => run(file, display, token, parse),
+        Commands::Repl { parse, token } => repl::repl(token, parse),
+    }
+}
+
+fn run(path: String, display: bool, show_token: bool, show_parse: bool) {
+    if show_token && show_parse {
         eprintln!("error: cannot specify both --token and --parse flags");
         return;
     }
 
-    if args.file.is_none() {
-        return repl::repl(args.token, args.parse);
-    }
-
-    match fs::read_to_string(args.file.unwrap()) {
+    match fs::read_to_string(path) {
         Ok(input) => {
-            if args.display {
+            if display {
                 for line in input.lines() {
                     println!("# {}", line);
                 }
             }
 
             let tokens = Lexer::new(&input).lex();
-            if args.token {
+            if show_token {
                 for token in &tokens {
                     println!("{:?}", token);
                 }
@@ -48,7 +79,7 @@ fn main() {
 
             match Parser::new(tokens).parse() {
                 Ok(p) => {
-                    if args.parse {
+                    if show_parse {
                         for stmt in &p.statements {
                             match stmt {
                                 Statement::Assign(a) => println!("{:#?}", a),
