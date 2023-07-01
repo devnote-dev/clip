@@ -73,6 +73,7 @@ pub enum Expression {
     Operator(Operator),
     Function(Function),
     Call(Call),
+    And(And),
 }
 
 impl Expression {
@@ -93,6 +94,7 @@ impl Expression {
                     Err(Error::new(&format!("expected right paren; got {t}")))
                 }
             }
+            Token::And => Ok(Self::And(And::parse(p)?)),
             Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
@@ -127,6 +129,7 @@ impl Parse for Expression {
                     Err(Error::new(&format!("expected right paren; got {t}")))
                 }
             }
+            Token::And => Ok(Self::And(And::parse(p)?)),
             Token::BlockStart => Ok(Self::Function(Function::parse(p)?)),
             Token::Integer(_) | Token::Float(_) | Token::String(_) | Token::True | Token::False => {
                 Ok(Self::Primitive(Primitive::parse(p)?))
@@ -332,5 +335,26 @@ impl Parse for Call {
         }
 
         Ok(Self { name, args })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct And(pub Vec<Expression>);
+
+impl Parse for And {
+    fn parse(p: &mut Parser) -> Result<Self, Error> {
+        let mut args = Vec::new();
+
+        loop {
+            match p.peek_token() {
+                Token::EOF | Token::Semicolon | Token::Newline | Token::RightParen => break,
+                _ => {
+                    _ = p.next_token();
+                    args.push(Expression::parse(p)?);
+                }
+            }
+        }
+
+        Ok(Self(args))
     }
 }

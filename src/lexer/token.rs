@@ -9,6 +9,11 @@ pub enum Token {
     RightParen,
     LeftBracket,
     RightBracket,
+    BlockStart,
+    BlockEnd,
+
+    And,
+    Or,
 
     Assign,
     Equal,
@@ -17,8 +22,6 @@ pub enum Token {
     Asterisk,
     Slash,
     Bang,
-    BlockStart,
-    BlockEnd,
 
     Integer(String),
     Float(String),
@@ -39,6 +42,8 @@ impl Display for Token {
             Token::RightParen => write!(f, "right paren"),
             Token::LeftBracket => write!(f, "left bracket"),
             Token::RightBracket => write!(f, "right bracket"),
+            Token::And => write!(f, "and"),
+            Token::Or => write!(f, "or"),
             Token::Assign => write!(f, "assign"),
             Token::Equal => write!(f, "equal"),
             Token::Plus => write!(f, "plus"),

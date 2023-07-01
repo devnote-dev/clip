@@ -1,7 +1,7 @@
 use super::{ops, Scope};
 use crate::{
     error::Error,
-    parser::ast::{Assign, Call, Expression, Function, Primitive, Statement},
+    parser::ast::{And, Assign, Call, Expression, Function, Primitive, Statement},
 };
 use std::fmt::{Display, Formatter, Result as FmtResult};
 
@@ -29,6 +29,7 @@ impl Value {
             Expression::Operator(v) => ops::eval_operator(v.clone(), scope),
             Expression::Function(v) => Ok(Self::Function(v.clone())),
             Expression::Call(v) => Value::eval_call(v.clone(), scope),
+            Expression::And(v) => Value::eval_logic_and(v.clone(), scope),
         }
     }
 
@@ -84,6 +85,29 @@ impl Value {
                 Err(Error::new(&format!("cannot call type {} as a function", p)))
             }
         }
+    }
+
+    fn eval_logic_and(and: And, scope: &mut Scope) -> Result<Self, Error> {
+        let mut values = Vec::new();
+
+        for expr in &and.0 {
+            values.push(Value::eval_expr(expr, scope)?);
+        }
+
+        for val in values {
+            match val {
+                Value::Primitive(p) => match p {
+                    Primitive::Boolean(v) if !v => {
+                        return Ok(Value::Primitive(Primitive::Boolean(false)));
+                    }
+                    Primitive::Null => return Ok(Value::Primitive(Primitive::Boolean(false))),
+                    _ => (),
+                },
+                Value::Function(_) => (),
+            }
+        }
+
+        Ok(Value::Primitive(Primitive::Boolean(true)))
     }
 
     pub fn value(&self) -> String {

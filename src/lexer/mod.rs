@@ -126,6 +126,38 @@ impl<'a> Lexer<'a> {
                         res.push(Token::Slash);
                         _ = self.input.next();
                     }
+                    '&' => {
+                        _ = self.input.next();
+                        match self.input.peek() {
+                            Some(&c) => {
+                                if c == '&' {
+                                    res.push(Token::And);
+                                    _ = self.input.next();
+                                } else {
+                                    res.push(Token::Illegal("unexpected: &".to_string()));
+                                }
+                            }
+                            None => {
+                                res.push(Token::Illegal("unexpected: &".to_string()));
+                            }
+                        }
+                    }
+                    '|' => {
+                        _ = self.input.next();
+                        match self.input.peek() {
+                            Some(&c) => {
+                                if c == '|' {
+                                    res.push(Token::And);
+                                    _ = self.input.next();
+                                } else {
+                                    res.push(Token::Illegal("unexpected: |".to_string()));
+                                }
+                            }
+                            None => {
+                                res.push(Token::Illegal("unexpected: |".to_string()));
+                            }
+                        }
+                    }
                     '!' => {
                         res.push(Token::Bang);
                         _ = self.input.next();
