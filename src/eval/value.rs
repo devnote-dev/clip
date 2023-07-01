@@ -40,11 +40,23 @@ impl Value {
         match val {
             Value::Function(fun) => {
                 if call.args.len() != fun.params.len() {
-                    return Err(Error::new(&format!(
-                        "expected {} arguments to function {}",
-                        fun.params.len(),
-                        call.name.value
-                    )));
+                    if call.args.len() == 1 && fun.params.is_empty() {
+                        match &call.args[0] {
+                            Expression::Primitive(Primitive::Null) => (),
+                            _ => {
+                                return Err(Error::new(&format!(
+                                    "function {} can only be called with ()",
+                                    call.name.value
+                                )))
+                            }
+                        }
+                    } else {
+                        return Err(Error::new(&format!(
+                            "expected {} arguments to function {}",
+                            fun.params.len(),
+                            call.name.value
+                        )));
+                    }
                 }
 
                 let mut child = Scope {
