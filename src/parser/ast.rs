@@ -108,7 +108,8 @@ impl Parse for If {
         }
 
         let mut alternative = None;
-        if p.next_token().value == TokenValue::Else {
+        if p.peek_token().value == TokenValue::Else {
+            _ = p.next_token();
             if p.next_token().value != TokenValue::BlockStart {
                 return Err(Error::new(&format!(
                     "expected block start; got {}",
@@ -442,7 +443,8 @@ impl Parse for And {
                 TokenValue::EOF
                 | TokenValue::Semicolon
                 | TokenValue::Newline
-                | TokenValue::RightParen => break,
+                | TokenValue::RightParen
+                | TokenValue::BlockStart => break,
                 _ => {
                     _ = p.next_token();
                     args.push(Expression::parse(p)?);
@@ -466,7 +468,8 @@ impl Parse for Or {
                 TokenValue::EOF
                 | TokenValue::Semicolon
                 | TokenValue::Newline
-                | TokenValue::RightParen => break,
+                | TokenValue::RightParen
+                | TokenValue::BlockStart => break,
                 _ => {
                     _ = p.next_token();
                     args.push(Expression::parse(p)?);
