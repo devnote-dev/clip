@@ -31,9 +31,11 @@ impl Value {
             }
         };
 
+        let mut res = Value::Primitive(Primitive::Null);
+
         if condition {
             for cons in &i.consequence {
-                match cons.as_ref() {
+                res = match cons.as_ref() {
                     Statement::Assign(v) => Value::eval_assign(v, scope)?,
                     Statement::If(v) => Value::eval_if_condition(v, scope)?,
                     Statement::Expression(v) => Value::eval_expr(v, scope)?,
@@ -41,7 +43,7 @@ impl Value {
             }
         } else if let Some(alternative) = &i.alternative {
             for alt in alternative {
-                match alt.as_ref() {
+                res = match alt.as_ref() {
                     Statement::Assign(v) => Value::eval_assign(v, scope)?,
                     Statement::If(v) => Value::eval_if_condition(v, scope)?,
                     Statement::Expression(v) => Value::eval_expr(v, scope)?,
@@ -49,7 +51,7 @@ impl Value {
             }
         }
 
-        Ok(Self::Primitive(Primitive::Null))
+        Ok(res)
     }
 
     pub fn eval_expr(e: &Expression, scope: &mut Scope) -> Result<Self, Error> {
