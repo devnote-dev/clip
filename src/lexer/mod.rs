@@ -48,10 +48,12 @@ impl<'a> Lexer<'a> {
                         self.next();
                     }
                     '#' => loop {
-                        match self.input.next() {
-                            Some(c) => {
+                        match self.input.peek() {
+                            Some(&c) => {
                                 if c == '\n' {
                                     break;
+                                } else {
+                                    self.next();
                                 }
                             }
                             None => {
