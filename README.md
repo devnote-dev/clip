@@ -10,7 +10,7 @@ A toy programming language for me to learn and explore compilers/the compilation
 
 ## Using
 
-You can run the interpreter via `cargo run <file>` or start the REPL with just `cargo run`.
+You can run the interpreter via `cargo run -- run <file>` or start the REPL with just `cargo run -- repl`.
 
 ## Syntax
 
@@ -27,7 +27,7 @@ Variables can be assigned and reassigned using `=`:
 
 ### Data types
 
-There are primitive data types such as integers, floats, strings and booleans as per usual. However, there is no _explicit_ `null`. Instead, null is represented via an empty expression `()` (also known as "unit" in some actual languages).
+There are primitive data types such as integers, floats, strings and booleans as per usual. However, there is no _explicit_ `null`. Instead, `null` is represented via an empty expression `()` (also known as "unit" in some actual languages).
 
 ### Operators
 
@@ -88,10 +88,12 @@ fib 12 # integer : 233
 
 ## Development
 
-- Control statements (`if`, `elif`, `else`, `for`)
+- Control statements (`if`, `else`, `for`)
 - Module management (`import`, `export`)
 - Method calls
-- Custom types (`object`)
+- Data types (`object`, `init`)
+- Function type signatures
+- Error management (`error`, `catch`)
 
 This repository is managed under the Mozilla Public License v2.
 
