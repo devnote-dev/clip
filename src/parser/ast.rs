@@ -108,34 +108,50 @@ impl Parse for If {
         }
 
         let mut alternative = None;
-        if p.peek_token().value == TokenValue::Else {
+
+        while p.peek_token().value == TokenValue::Semicolon
+            || p.peek_token().value == TokenValue::Newline
+        {
             _ = p.next_token();
-            if p.next_token().value != TokenValue::BlockStart {
-                return Err(Error::new(&format!(
-                    "expected block start; got {}",
-                    p.current_token().value
-                )));
-            }
+        }
 
-            let mut statements = Vec::new();
+        match p.peek_token().value {
+            TokenValue::BlockEnd => _ = p.next_token(),
+            TokenValue::Else => {
+                _ = p.next_token();
+                if p.next_token().value != TokenValue::BlockStart {
+                    return Err(Error::new(&format!(
+                        "expected block start; got {}",
+                        p.current_token().value
+                    )));
+                }
 
-            loop {
-                match p.peek_token().value {
-                    TokenValue::EOF => return Err(Error::new("unexpected end of file")),
-                    TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
-                    TokenValue::BlockEnd => {
-                        _ = p.next_token();
-                        break;
-                    }
-                    _ => {
-                        _ = p.next_token();
-                        let stmt = Statement::parse(p)?;
-                        statements.push(Box::new(stmt));
+                let mut statements = Vec::new();
+
+                loop {
+                    match p.peek_token().value {
+                        TokenValue::EOF => return Err(Error::new("unexpected end of file")),
+                        TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
+                        TokenValue::BlockEnd => {
+                            _ = p.next_token();
+                            break;
+                        }
+                        _ => {
+                            _ = p.next_token();
+                            let stmt = Statement::parse(p)?;
+                            statements.push(Box::new(stmt));
+                        }
                     }
                 }
-            }
 
-            alternative = Some(statements);
+                alternative = Some(statements);
+            }
+            _ => {
+                return Err(Error::new(&format!(
+                    "expected block end or else statement; got {}",
+                    p.peek_token().value
+                )))
+            }
         }
 
         Ok(Self {
@@ -311,7 +327,8 @@ impl Parse for Operator {
                 TokenValue::EOF
                 | TokenValue::Semicolon
                 | TokenValue::Newline
-                | TokenValue::RightParen => break,
+                | TokenValue::RightParen
+                | TokenValue::BlockStart => break,
                 _ => {
                     _ = p.next_token();
                     match Expression::parse_non_call(p) {
@@ -392,6 +409,7 @@ impl Parse for Function {
                 _ => {
                     body.push(Statement::parse(p)?);
                     if p.current_token().value == TokenValue::BlockEnd {
+                        _ = p.next_token();
                         break;
                     }
                     _ = p.next_token();
