@@ -94,6 +94,8 @@ fib 12 # integer : 233
 - Data types (`object`, `init`)
 - Function type signatures
 - Error management (`error`, `catch`)
+- Null safety
+- Separation of interpretation and compilation
 
 This repository is managed under the Mozilla Public License v2.
 
