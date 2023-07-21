@@ -467,7 +467,10 @@ impl Parse for Call {
                 | TokenValue::RightParen => break,
                 _ => {
                     _ = p.next_token();
-                    args.push(Expression::parse(p)?);
+                    match Expression::parse_non_call(p) {
+                        Ok(expr) => args.push(expr),
+                        Err(_) => break,
+                    }
                 }
             }
         }
