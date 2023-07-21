@@ -49,6 +49,13 @@ There are primitive data types such as integers, floats, strings and booleans as
 | `/ a b ...`    | Division: divides all the arguments sequentially.                                 |
 | `! a`          | Inverse: gets the inverse value of `a`. Only works for boolean values.            |
 
+There is no explicit `!=` (not equal) operator because this can be achieved by combining the inverse and equals operators:
+
+```
+# works the same
+! == 2 4 # boolean : true
+```
+
 ### Functions
 
 Functions can be declared using braces. A function's return type is inferred from last expression in the function block. To call a function, simply specify provide the arguments after the function name. If the function doesn't take any arguments, it can be called with `()`.
