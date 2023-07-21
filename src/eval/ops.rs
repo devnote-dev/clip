@@ -38,6 +38,10 @@ pub fn eval_operator(op: Operator, scope: &mut Scope) -> Result<Value, Error> {
 
     match op.kind {
         OperatorKind::Equal => eval_operator_equal(values),
+        OperatorKind::Greater => eval_operator_greater(values),
+        OperatorKind::GreaterEqual => eval_operator_greater_equal(values),
+        OperatorKind::Less => eval_operator_less(values),
+        OperatorKind::LessEqual => eval_operator_less_equal(values),
         OperatorKind::Add => eval_operator_add(values),
         OperatorKind::Subtract => eval_operator_subtract(values),
         OperatorKind::Multiply => eval_operator_multiply(values),
@@ -132,6 +136,174 @@ fn eval_operator_equal(values: Vec<Primitive>) -> Result<Value, Error> {
 
             Ok(Value::Primitive(Primitive::Boolean(res)))
         }
+    }
+}
+
+fn eval_operator_greater(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => res = val > v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Float(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => res = val > v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        val => Err(Error::new(&format!("cannot compare type {}", val))),
+    }
+}
+
+fn eval_operator_greater_equal(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => res = val >= v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Float(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => res = val >= v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        val => Err(Error::new(&format!("cannot compare type {}", val))),
+    }
+}
+
+fn eval_operator_less(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => res = val < v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Float(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => res = val < v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        val => Err(Error::new(&format!("cannot compare type {}", val))),
+    }
+}
+
+fn eval_operator_less_equal(values: Vec<Primitive>) -> Result<Value, Error> {
+    match &values[0] {
+        Primitive::Integer(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Integer(v) => res = val <= v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type integer with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        Primitive::Float(val) => {
+            let mut res = false;
+
+            for arg in values.iter().skip(1) {
+                match arg {
+                    Primitive::Float(v) => res = val <= v,
+                    Primitive::Null => res = false,
+                    _ => {
+                        return Err(Error::new(&format!(
+                            "cannot compare type float with type {}",
+                            arg
+                        )))
+                    }
+                }
+            }
+
+            Ok(Value::Primitive(Primitive::Boolean(res)))
+        }
+        val => Err(Error::new(&format!("cannot compare type {}", val))),
     }
 }
 

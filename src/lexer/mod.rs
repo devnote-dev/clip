@@ -102,6 +102,38 @@ impl<'a> Lexer<'a> {
                             }
                         }
                     }
+                    '<' => {
+                        self.next();
+                        match self.input.peek() {
+                            Some(&c) => {
+                                if c == '=' {
+                                    res.push(Token::new(TokenValue::LessEqual, self.loc()));
+                                    self.next();
+                                } else {
+                                    res.push(Token::new(TokenValue::Less, self.loc()));
+                                }
+                            }
+                            None => {
+                                res.push(Token::new(TokenValue::Less, self.loc()));
+                            }
+                        }
+                    }
+                    '>' => {
+                        self.next();
+                        match self.input.peek() {
+                            Some(&c) => {
+                                if c == '=' {
+                                    res.push(Token::new(TokenValue::GreaterEqual, self.loc()));
+                                    self.next();
+                                } else {
+                                    res.push(Token::new(TokenValue::Greater, self.loc()));
+                                }
+                            }
+                            None => {
+                                res.push(Token::new(TokenValue::Greater, self.loc()));
+                            }
+                        }
+                    }
                     '+' => {
                         res.push(Token::new(TokenValue::Plus, self.loc()));
                         self.next();

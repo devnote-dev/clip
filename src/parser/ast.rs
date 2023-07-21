@@ -202,6 +202,10 @@ impl Expression {
             | TokenValue::False => Ok(Self::Primitive(Primitive::parse(p)?)),
             TokenValue::Ident(_) => Ok(Self::Identifier(Identifier::parse(p)?)),
             TokenValue::Equal
+            | TokenValue::Greater
+            | TokenValue::GreaterEqual
+            | TokenValue::Less
+            | TokenValue::LessEqual
             | TokenValue::Plus
             | TokenValue::Minus
             | TokenValue::Asterisk
@@ -245,6 +249,10 @@ impl Parse for Expression {
                 _ => Ok(Self::Call(Call::parse(p)?)),
             },
             TokenValue::Equal
+            | TokenValue::Greater
+            | TokenValue::GreaterEqual
+            | TokenValue::Less
+            | TokenValue::LessEqual
             | TokenValue::Plus
             | TokenValue::Minus
             | TokenValue::Asterisk
@@ -313,6 +321,10 @@ impl Parse for Operator {
     fn parse(p: &mut Parser) -> Result<Self, Error> {
         let kind = match p.current_token().value {
             TokenValue::Equal => OperatorKind::Equal,
+            TokenValue::Greater => OperatorKind::Greater,
+            TokenValue::GreaterEqual => OperatorKind::GreaterEqual,
+            TokenValue::Less => OperatorKind::Less,
+            TokenValue::LessEqual => OperatorKind::LessEqual,
             TokenValue::Plus => OperatorKind::Add,
             TokenValue::Minus => OperatorKind::Subtract,
             TokenValue::Asterisk => OperatorKind::Multiply,
@@ -347,6 +359,10 @@ impl Parse for Operator {
 #[derive(Clone, Debug, PartialEq)]
 pub enum OperatorKind {
     Equal,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
     Add,
     Subtract,
     Multiply,
@@ -358,6 +374,10 @@ impl Display for OperatorKind {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match *self {
             OperatorKind::Equal => write!(f, "equal"),
+            OperatorKind::Greater => write!(f, "greater than"),
+            OperatorKind::GreaterEqual => write!(f, "greater than or equal"),
+            OperatorKind::Less => write!(f, "less than"),
+            OperatorKind::LessEqual => write!(f, "less than or equal"),
             OperatorKind::Add => write!(f, "add"),
             OperatorKind::Subtract => write!(f, "subtract"),
             OperatorKind::Multiply => write!(f, "multiply"),
