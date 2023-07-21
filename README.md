@@ -90,6 +90,12 @@ sum_numbers add # integer : 12
 sum_numbers subtract # integer : -8
 ```
 
+Alternatively, you can pass in a function literal directly (i.e. closures) but this may not be a permanent feature:
+
+```
+sum_numbers { [a b c] + a b c } # integer : 12
+```
+
 ## Control Flow
 
 Control flow in the form of `if` and `else` statements is possible (chained `else-if` statements coming soon). Here's fibonacci (it actually works):
