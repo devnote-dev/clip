@@ -79,6 +79,17 @@ Note that calling a function that has a singular argument with `()` still works:
 is_null () # boolean : true
 ```
 
+Because of this rule, this allows functions to be passed around as arguments:
+
+```
+= sum_numbers { [fn] fn 2 4 6 }
+= add { [a b c] + a b c }
+= subtract { [a b c] - a b c }
+
+sum_numbers add # integer : 12
+sum_numbers subtract # integer : -8
+```
+
 ## Control Flow
 
 Control flow in the form of `if` and `else` statements is possible (chained `else-if` statements coming soon). Here's fibonacci (it actually works):
