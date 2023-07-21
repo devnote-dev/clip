@@ -61,11 +61,17 @@ impl Parse for Assign {
         _ = p.next_token();
         let value = Expression::parse(p)?;
 
-        match &p.peek_token().value {
-            TokenValue::EOF | TokenValue::Semicolon | TokenValue::Newline => {
-                Ok(Self { name, value })
+        if let TokenValue::EOF | TokenValue::Semicolon | TokenValue::Newline =
+            p.current_token().value
+        {
+            Ok(Self { name, value })
+        } else {
+            match &p.peek_token().value {
+                TokenValue::EOF | TokenValue::Semicolon | TokenValue::Newline => {
+                    Ok(Self { name, value })
+                }
+                t => Err(Error::new(&format!("unexpected token {t}"))),
             }
-            t => Err(Error::new(&format!("unexpected token {t}"))),
         }
     }
 }
