@@ -134,6 +134,7 @@ impl Parse for If {
                         TokenValue::Semicolon | TokenValue::Newline => _ = p.next_token(),
                         TokenValue::BlockEnd => {
                             _ = p.next_token();
+                            _ = p.next_token();
                             break;
                         }
                         _ => {
