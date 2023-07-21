@@ -36,8 +36,6 @@ There are primitive data types such as integers, floats, strings and booleans as
 
 | Definition     | Description                                                                          |
 | -------------- | ------------------------------------------------------------------------------------ |
-| `&& a b ...`   | Logic And: checks if all arguments are _truthy_.                                     |
-| `\|\| a b ...` | Logic Or: checks if at least one argument is _truthy_.                               |
 | `== a b ...`   | Equality: checks if `a` is equal to any of the other arguments.                      |
 | `> a b ...`    | Comparison: checks if `a` is greater than any of the other arguments.                |
 | `>= a b ...`   | Comparison: checks if `a` is greater than or equal to any of the other arguments.    |
@@ -47,6 +45,8 @@ There are primitive data types such as integers, floats, strings and booleans as
 | `- a ...`      | Subtraction: subtracts all the arguments sequentially. Negates if there is only one. |
 | `* a b ...`    | Multiplication: multiplies all the arguments sequentially.                           |
 | `/ a b ...`    | Division: divides all the arguments sequentially.                                    |
+| `&& a b ...`   | Logic And: checks if all arguments are _truthy_.                                     |
+| `\|\| a b ...` | Logic Or: checks if at least one argument is _truthy_.                               |
 | `! a`          | Inverse: gets the inverse value of `a`. Only works for boolean values.               |
 
 There is no explicit `!=` (not equal) operator because this can be achieved by combining the inverse and equals operators:
