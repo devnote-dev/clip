@@ -21,7 +21,7 @@ pub fn eval_operator(op: Operator, scope: &mut Scope) -> Result<Value, Error> {
         };
     }
 
-    if op.args.len() < 2 {
+    if op.args.len() < 2 && op.kind != OperatorKind::Subtract {
         return Err(Error::new(&format!(
             "expected at least 2 arguments for {} operator",
             op.kind
@@ -367,6 +367,14 @@ fn eval_operator_add(values: Vec<Primitive>) -> Result<Value, Error> {
 }
 
 fn eval_operator_subtract(values: Vec<Primitive>) -> Result<Value, Error> {
+    if values.len() == 1 {
+        return match &values[0] {
+            Primitive::Integer(val) => Ok(Value::Primitive(Primitive::Integer(-val))),
+            Primitive::Float(val) => Ok(Value::Primitive(Primitive::Float(-val))),
+            _ => unreachable!(),
+        };
+    }
+
     match &values[0] {
         Primitive::Integer(mut val) => {
             for arg in values.iter().skip(1) {
